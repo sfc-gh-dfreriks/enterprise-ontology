@@ -1,0 +1,62 @@
+You are running unattended in a Snowflake AGENT TASK. There is no human to ask
+follow-up questions; complete the task autonomously. Do NOT ask any clarifying
+questions; just execute.
+
+TASK: detect drift between the deployed supply-chain ontology in Snowflake and
+the copy the published app serves. A stale published copy shows wrong counts
+without failing, which is the failure this check exists to catch.
+
+STEP 1 - read the live ontology from Snowflake. Run exactly these queries:
+
+  SELECT COUNT(*) AS CLASSES        FROM SAP_SUPPLY_CHAIN.ONTOLOGY.ONT_CLASS;
+  SELECT COUNT(*) AS ABSTRACT       FROM SAP_SUPPLY_CHAIN.ONTOLOGY.ONT_CLASS WHERE IS_ABSTRACT;
+  SELECT COUNT(*) AS RELATIONS      FROM SAP_SUPPLY_CHAIN.ONTOLOGY.ONT_RELATION_DEF;
+  SELECT COUNT(*) AS INFERRED       FROM SAP_SUPPLY_CHAIN.ONTOLOGY.REL_EDGE_INFERRED;
+  SELECT COUNT(*) AS INSTANCES      FROM SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE WHERE NODE_TYPE <> 'OntologyClass';
+  SELECT COUNT(*) AS SEMANTIC_VIEWS FROM SAP_SUPPLY_CHAIN.INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = 'ONTOLOGY' AND TABLE_NAME LIKE 'VW_ONT%';
+
+STEP 2 - read the published copy. It is a public file, so no credentials and no
+clone are needed. Use bash:
+
+  curl -s https://raw.githubusercontent.com/sfc-gh-dfreriks/supply-chain-ontology/main/data/sc_ontology_schema.json
+
+Parse it with python3. The fields to compare are:
+  counts.classes, counts.abstract, counts.relations, counts.instances
+and the inferred-edge total, which is the sum of relations[].rule.edges over the
+relations that have a non-null rule.
+
+STEP 3 - compare the five figures. Treat any difference as drift.
+
+STEP 4 - also sanity-check the deployed layer itself, independently of the
+published copy. Report each as OK or PROBLEM:
+  a) every concrete class has a physical mapping:
+     SELECT c.CLASS_NAME FROM SAP_SUPPLY_CHAIN.ONTOLOGY.ONT_CLASS c
+     LEFT JOIN SAP_SUPPLY_CHAIN.ONTOLOGY.ONT_CLASS_MAP m ON m.CLASS_NAME = c.CLASS_NAME
+     WHERE m.CLASS_NAME IS NULL AND NOT c.IS_ABSTRACT;
+     Expect zero rows. Any row is a PROBLEM.
+  b) the inference rule still derives edges:
+     SELECT r.RULE_ID, r.IS_ENABLED, COUNT(e.SRC_ID) AS EDGES
+     FROM SAP_SUPPLY_CHAIN.ONTOLOGY.ONT_RULE r
+     LEFT JOIN SAP_SUPPLY_CHAIN.ONTOLOGY.REL_EDGE_INFERRED e ON e.RULE_ID = r.RULE_ID
+     GROUP BY 1, 2;
+     A rule that is enabled but derives zero edges is a PROBLEM.
+  c) the abstract views still span several concrete types:
+     SELECT ENTITY_TYPE, COUNT(*) FROM SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_PARTY GROUP BY 1;
+     Expect two types, Customer and Supplier. One type or zero rows is a PROBLEM.
+
+STEP 5 - write a short report as your final message. Structure it as:
+  - one line stating whether the published copy is in sync or has drifted
+  - if drifted, a small table of field, published value, snowflake value
+  - the results of the three health checks from step 4
+  - if anything drifted or is a PROBLEM, this exact remediation line:
+      Run: python3 tools/refresh_all.py   then commit and push
+    Do not attempt the refresh yourself. It needs a local Node build, a running
+    server and local Snowflake key-pair auth, none of which exist in this sandbox.
+
+Keep the report under 20 lines. Do not speculate about causes beyond what the
+queries show.
+
+After completing, print exactly one of:
+  ONTOLOGY_DRIFT_OK in_sync=true classes=<n> relations=<n> instances=<n>
+  ONTOLOGY_DRIFT_FOUND fields=<comma-separated field names> checks_failed=<n>
+  ONTOLOGY_DRIFT_FAILED:<one-line reason>

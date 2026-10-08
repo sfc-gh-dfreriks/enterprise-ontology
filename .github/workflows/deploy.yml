@@ -1,0 +1,72 @@
+name: Deploy Enterprise Ontology (static) to Pages
+
+# Publishes the public, credential-free build. Dashboards render from the JSON
+# snapshots committed under client/public/data — regenerate them with
+# `npm run bake` against a running local server, then commit and push.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/**"
+      - ".github/workflows/deploy.yml"
+      # the build runs `npm ci`, so a dependency or workspace-name change can break
+      # it even when nothing under client/ moved — the lockfile must be watched too
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Fail early and loudly: without the snapshots the site builds fine but
+      # every page renders empty, which is worse than a red build.
+      - name: Check snapshots are present
+        run: |
+          n=$(ls client/public/data/*.json 2>/dev/null | wc -l)
+          echo "snapshot files: $n"
+          if [ "$n" -lt 20 ]; then
+            echo "::error::client/public/data has $n snapshots. Run 'npm run bake' against a local server and commit the result."
+            exit 1
+          fi
+
+      - name: Build static site
+        run: npx vite build
+        working-directory: client
+        env:
+          VITE_STATIC: "1"
+          # GitHub Pages serves project sites from /<repo>/, so assets need that prefix.
+          BASE_PATH: "/${{ github.event.repository.name }}/"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

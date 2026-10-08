@@ -1,0 +1,295 @@
+name: SUPPLY_CHAIN_ONTOLOGY_MODEL
+description: 'Supply-chain slice of the SAP Business Data Cloud data product ontology: 36 data products, 338 CDS entities and 281 associations across the Design to Operate, Source to Pay and Lead to Cash processes. A product is in scope when its process is Design to Operate or its line of business includes Supply Chain, Manufacturing, Sourcing and Procurement, or R&D Engineering. This is metadata about SAP data products and their entity structure, not transactional supply-chain data: there are no shipments, inventory levels or orders here. V_PRODUCT counts are prefixed PRODUCT_ (PRODUCT_ENTITY_COUNT, PRODUCT_ASSOCIATION_COUNT, PRODUCT_CROSS_ASSOC) to keep them distinct from the same measures on V_ENTITY and V_PROCESS_ROLLUP. Entities reach their business process through their data product; V_ENTITY.PROCESS_CODE is a denormalized attribute and must not be joined to V_PROCESS directly, because that creates a second path to the same dimension.'
+tables:
+  - name: V_PROCESS
+    base_table:
+      database: SAP_BDC_ONTOLOGY
+      schema: SUPPLY_CHAIN
+      table: V_PROCESS
+    primary_key:
+      columns:
+        - PROCESS_CODE
+    dimensions:
+      - name: PROCESS_CODE
+        expr: PROCESS_CODE
+        data_type: VARCHAR
+      - name: PROCESS_NAME
+        expr: PROCESS_NAME
+        data_type: VARCHAR
+  - name: V_PRODUCT
+    base_table:
+      database: SAP_BDC_ONTOLOGY
+      schema: SUPPLY_CHAIN
+      table: V_PRODUCT
+    primary_key:
+      columns:
+        - PRODUCT_TECH
+    dimensions:
+      - name: PRODUCT_TECH
+        expr: PRODUCT_TECH
+        data_type: VARCHAR
+      - name: PRODUCT_LABEL
+        expr: PRODUCT_LABEL
+        data_type: VARCHAR
+      - name: PROCESS_CODE
+        expr: PROCESS_CODE
+        data_type: VARCHAR
+      - name: LINE_OF_BUSINESS
+        expr: LINE_OF_BUSINESS
+        data_type: VARCHAR
+      - name: SOURCE_APPLICATION
+        expr: SOURCE_APPLICATION
+        data_type: VARCHAR
+      - name: SOURCE_SYSTEMS
+        expr: SOURCE_SYSTEMS
+        data_type: VARCHAR
+      - name: INDUSTRIES
+        expr: INDUSTRIES
+        data_type: VARCHAR
+      - name: SUITE_PACKAGE
+        expr: SUITE_PACKAGE
+        data_type: VARCHAR
+      - name: PROVENANCE
+        expr: PROVENANCE
+        data_type: VARCHAR
+      - name: CATEGORY
+        expr: CATEGORY
+        data_type: VARCHAR
+      - name: HAS_SEMANTIC_MODEL
+        expr: HAS_SEMANTIC_MODEL
+        data_type: BOOLEAN
+      - name: PRODUCT_ENTITY_COUNT
+        expr: PRODUCT_ENTITY_COUNT
+        data_type: NUMBER
+      - name: PRODUCT_ASSOCIATION_COUNT
+        expr: PRODUCT_ASSOCIATION_COUNT
+        data_type: NUMBER
+      - name: PRODUCT_CROSS_ASSOC
+        expr: PRODUCT_CROSS_ASSOC
+        data_type: NUMBER
+      - name: CANONICAL_OBJECTS
+        expr: CANONICAL_OBJECTS
+        data_type: VARCHAR
+      - name: ROLE_FACT_COUNT
+        expr: ROLE_FACT_COUNT
+        data_type: NUMBER
+      - name: ROLE_DIMENSION_COUNT
+        expr: ROLE_DIMENSION_COUNT
+        data_type: NUMBER
+      - name: ROLE_TEXT_COUNT
+        expr: ROLE_TEXT_COUNT
+        data_type: NUMBER
+      - name: ROLE_HIERARCHY_COUNT
+        expr: ROLE_HIERARCHY_COUNT
+        data_type: NUMBER
+      - name: ROLE_VALUE_HELP_COUNT
+        expr: ROLE_VALUE_HELP_COUNT
+        data_type: NUMBER
+      - name: ROLE_OTHER_COUNT
+        expr: ROLE_OTHER_COUNT
+        data_type: NUMBER
+    facts:
+      - name: CENTRALITY
+        expr: CENTRALITY
+        data_type: FLOAT
+    metrics:
+      - name: SC_TOTAL_DATA_PRODUCTS
+        description: Number of supply chain data products
+        expr: COUNT(DISTINCT PRODUCT_TECH)
+      - name: SC_TOTAL_PRODUCT_ENTITIES
+        description: Total CDS entities across the selected products
+        expr: SUM(PRODUCT_ENTITY_COUNT)
+      - name: SC_TOTAL_PRODUCT_ASSOCIATIONS
+        description: Total associations across the selected products
+        expr: SUM(PRODUCT_ASSOCIATION_COUNT)
+      - name: SC_TOTAL_CROSS_PRODUCT_ASSOC
+        description: Associations reaching other data products
+        expr: SUM(PRODUCT_CROSS_ASSOC)
+      - name: SC_PRODUCTS_WITH_SEMANTIC_MODEL
+        description: Products with a generated semantic model
+        expr: COUNT(CASE WHEN HAS_SEMANTIC_MODEL THEN 1 END)
+      - name: SC_AVG_ENTITIES_PER_PRODUCT
+        description: Average CDS entities per data product
+        expr: AVG(PRODUCT_ENTITY_COUNT)
+  - name: V_ENTITY
+    base_table:
+      database: SAP_BDC_ONTOLOGY
+      schema: SUPPLY_CHAIN
+      table: V_ENTITY
+    dimensions:
+      - name: ENTITY_ID
+        expr: ENTITY_ID
+        data_type: VARCHAR
+      - name: ENTITY_NAME
+        expr: ENTITY_NAME
+        data_type: VARCHAR
+      - name: ENTITY_LABEL
+        expr: ENTITY_LABEL
+        data_type: VARCHAR
+      - name: PRODUCT_TECH
+        expr: PRODUCT_TECH
+        data_type: VARCHAR
+      - name: PROCESS_CODE
+        expr: PROCESS_CODE
+        data_type: VARCHAR
+      - name: ELEMENT_COUNT
+        expr: ELEMENT_COUNT
+        data_type: NUMBER
+      - name: SEMANTIC_ROLE
+        expr: SEMANTIC_ROLE
+        data_type: VARCHAR
+      - name: MODELING_PATTERN
+        expr: MODELING_PATTERN
+        data_type: VARCHAR
+      - name: CANONICAL_OBJECT
+        expr: CANONICAL_OBJECT
+        data_type: VARCHAR
+      - name: ASSOCIATION_COUNT
+        expr: ASSOCIATION_COUNT
+        data_type: NUMBER
+    metrics:
+      - name: SC_TOTAL_ENTITIES
+        description: Number of supply chain CDS entities
+        expr: COUNT(DISTINCT ENTITY_ID)
+      - name: SC_TOTAL_ELEMENTS
+        description: Total elements across the selected entities
+        expr: SUM(ELEMENT_COUNT)
+      - name: SC_AVG_ELEMENTS_PER_ENTITY
+        description: Average elements per entity
+        expr: AVG(ELEMENT_COUNT)
+  - name: V_ENTITY_EDGE
+    base_table:
+      database: SAP_BDC_ONTOLOGY
+      schema: SUPPLY_CHAIN
+      table: V_ENTITY_EDGE
+    dimensions:
+      - name: SOURCE_ENTITY_ID
+        expr: SOURCE_ENTITY_ID
+        data_type: VARCHAR
+      - name: TARGET_ENTITY_ID
+        expr: TARGET_ENTITY_ID
+        data_type: VARCHAR
+      - name: IS_CROSS_PRODUCT
+        expr: IS_CROSS_PRODUCT
+        data_type: BOOLEAN
+    metrics:
+      - name: SC_TOTAL_ASSOCIATIONS
+        description: Entity-to-entity associations within supply chain
+        expr: COUNT(*)
+  - name: V_ODM_EDGE
+    base_table:
+      database: SAP_BDC_ONTOLOGY
+      schema: SUPPLY_CHAIN
+      table: V_ODM_EDGE
+    dimensions:
+      - name: SOURCE_PRODUCT_TECH
+        expr: SOURCE_PRODUCT_TECH
+        data_type: VARCHAR
+      - name: TARGET_PRODUCT_TECH
+        expr: TARGET_PRODUCT_TECH
+        data_type: VARCHAR
+      - name: CANONICAL_OBJECT
+        expr: CANONICAL_OBJECT
+        data_type: VARCHAR
+    metrics:
+      - name: SC_TOTAL_ODM_LINKS
+        description: Canonical object links between data products
+        expr: COUNT(*)
+  - name: V_PROCESS_ROLLUP
+    base_table:
+      database: SAP_BDC_ONTOLOGY
+      schema: SUPPLY_CHAIN
+      table: V_PROCESS_ROLLUP
+    primary_key:
+      columns:
+        - PROCESS_CODE
+    dimensions:
+      - name: PROCESS_CODE
+        expr: PROCESS_CODE
+        data_type: VARCHAR
+      - name: PROCESS_NAME
+        expr: PROCESS_NAME
+        data_type: VARCHAR
+      - name: PRODUCT_COUNT
+        expr: PRODUCT_COUNT
+        data_type: NUMBER
+      - name: ENTITY_COUNT
+        expr: ENTITY_COUNT
+        data_type: NUMBER
+      - name: MAPPED_PRODUCT_COUNT
+        expr: MAPPED_PRODUCT_COUNT
+        data_type: NUMBER
+      - name: CROSS_PRODUCT_ASSOCIATIONS
+        expr: CROSS_PRODUCT_ASSOCIATIONS
+        data_type: NUMBER
+    facts:
+      - name: COVERAGE_PCT
+        expr: COVERAGE_PCT
+        data_type: NUMBER
+    metrics:
+      - name: SC_AVG_COVERAGE_PCT
+        description: Average semantic-model coverage across processes
+        expr: AVG(COVERAGE_PCT)
+relationships:
+  - name: V_ENTITY_TO_V_PRODUCT
+    left_table: V_ENTITY
+    right_table: V_PRODUCT
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: PRODUCT_TECH
+        right_column: PRODUCT_TECH
+  - name: V_PRODUCT_TO_V_PROCESS
+    left_table: V_PRODUCT
+    right_table: V_PROCESS
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: PROCESS_CODE
+        right_column: PROCESS_CODE
+verified_queries:
+  - name: 0;1
+    question: How many supply chain data products are in each business process?
+    sql: SELECT p.PROCESS_NAME, COUNT(*) AS PRODUCTS FROM v_product AS d JOIN v_process AS p ON d.PROCESS_CODE = p.PROCESS_CODE GROUP BY p.PROCESS_NAME ORDER BY PRODUCTS DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 1;1
+    question: Which supply chain data products have the most entities?
+    sql: SELECT PRODUCT_LABEL, PRODUCT_ENTITY_COUNT FROM v_product ORDER BY PRODUCT_ENTITY_COUNT DESC LIMIT 10
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 2;1
+    question: How many supply chain data products are there per line of business?
+    sql: SELECT LINE_OF_BUSINESS, COUNT(*) AS PRODUCTS FROM v_product GROUP BY LINE_OF_BUSINESS ORDER BY PRODUCTS DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 3;1
+    question: What is the breakdown of supply chain entities by semantic role?
+    sql: SELECT SEMANTIC_ROLE, COUNT(*) AS ENTITIES, SUM(ELEMENT_COUNT) AS ELEMENTS FROM v_entity GROUP BY SEMANTIC_ROLE ORDER BY ENTITIES DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 4;1
+    question: What entities are in the Bill of Material data product and what are their element counts and semantic roles?
+    sql: SELECT e.ENTITY_NAME, e.ELEMENT_COUNT, e.SEMANTIC_ROLE FROM v_entity AS e JOIN v_product AS p ON e.PRODUCT_TECH = p.PRODUCT_TECH WHERE p.PRODUCT_LABEL ILIKE '%Bill of Material%' ORDER BY e.ELEMENT_COUNT DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 5;1
+    question: Which canonical objects are most frequently used to link supply chain data products together?
+    sql: SELECT CANONICAL_OBJECT, COUNT(*) AS REFS FROM v_odm_edge GROUP BY CANONICAL_OBJECT ORDER BY REFS DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 6;1
+    question: What is the supply chain coverage summary by process?
+    sql: SELECT PROCESS_NAME, PRODUCT_COUNT, ENTITY_COUNT, COVERAGE_PCT FROM v_process_rollup ORDER BY PRODUCT_COUNT DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 7;1
+    question: Which supply chain products have the most cross-product associations?
+    sql: SELECT PRODUCT_LABEL, PRODUCT_CROSS_ASSOC FROM v_product ORDER BY PRODUCT_CROSS_ASSOC DESC LIMIT 10
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator
+  - name: 8;1
+    question: Which manufacturing products have the most entities and what are their source systems?
+    sql: SELECT PRODUCT_LABEL, SOURCE_SYSTEMS, PRODUCT_ENTITY_COUNT FROM v_product WHERE LINE_OF_BUSINESS ILIKE '%Manufacturing%' ORDER BY PRODUCT_ENTITY_COUNT DESC
+    verified_at: 1787937475
+    verified_by: Semantic Model Generator

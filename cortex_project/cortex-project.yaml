@@ -1,0 +1,7 @@
+version: 1
+artifacts:
+  - path: SUPPLY_CHAIN_ONTOLOGY_MODEL.sv.yaml
+    type: semantic_view
+    targets:
+      default:
+        object: SAP_BDC_ONTOLOGY.SUPPLY_CHAIN.SUPPLY_CHAIN_ONTOLOGY_MODEL
