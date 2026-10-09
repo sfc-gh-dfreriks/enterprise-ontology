@@ -8,6 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { runSql } from "./analyst.js";
+import { runScenario, PRESETS, type Scenario } from "../lib/entScenario.js";
 
 const MODEL = process.env.SCENARIO_LLM_MODEL ?? "claude-4-sonnet";
 let _e: any = null;
@@ -50,7 +51,8 @@ Capital (WCP) and Supply Chain (SCM) — through golden legal entities, customer
 facts as authoritative; never invent numbers. Lead with the direct answer, then evidence (a small markdown
 table when comparing), then 2-4 concrete actions. Say which apps each figure comes from. Customer and
 supplier identity comes from a demo crosswalk; mention it when an answer depends on cross-app identity.
-Money is USD. Under 300 words.`;
+Money is USD. Under 300 words. For a scenario, explain the propagation path, the biggest effect per app,
+and the decision it implies; state the scenario's assumptions where they change the answer.`;
 
 function factsFor(topic: string, a: Record<string, any>): unknown {
   const e = loadEnterprise();
@@ -66,12 +68,22 @@ function factsFor(topic: string, a: Record<string, any>): unknown {
     case "ent-people": return { departments: e.departments, companies: e.companies.map((c: any) => ({
       company: c.company, headcount: c.headcount, terminations: c.terminations, salary_cost_usd: c.salary_cost_usd,
       revenue_per_employee_usd: c.revenue_per_employee_usd })) };
+    case "ent-scenario": {
+      // Recomputed here from the spec the page sent, with the same engine the page ran,
+      // so Cortex reads exactly the result on screen.
+      const raw = typeof a.scenario === "string" ? JSON.parse(a.scenario) : a.scenario;
+      const spec = (a.preset ? PRESETS.find((p) => p.id === a.preset)?.scenario : raw) as Scenario | undefined;
+      if (!spec) return { error: "unknown scenario" };
+      return { scenario: spec, result: runScenario(e, spec), notes: e.notes };
+    }
+    case "ent-usecase": return { usecase: a.id, question: a.question, companies: e.companies, top_customers: e.customers.slice(0, 8),
+      top_suppliers: e.suppliers.slice(0, 8), exposure: e.exposure.slice(0, 12), notes: e.notes };
     default: throw new Error(`unknown topic ${topic}`);
   }
 }
 
 export const ENTERPRISE_TOPICS = ["ent-overview", "ent-companies", "ent-customer", "ent-supplier", "ent-customers",
-  "ent-suppliers", "ent-model", "ent-crosswalk", "ent-people"];
+  "ent-suppliers", "ent-model", "ent-crosswalk", "ent-people", "ent-scenario", "ent-usecase"];
 
 export async function askEnterprise(topic: string, a: Record<string, any>, question: string): Promise<string> {
   const facts = JSON.stringify(factsFor(topic, a)).slice(0, 60000);

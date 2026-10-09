@@ -202,7 +202,8 @@ def bake_enterprise() -> int:
     default Ask Cortex analysis for the aggregate views and the top records.
     Ask Cortex answers are real AI_COMPLETE output captured at bake time."""
     total = 0
-    for p in ["/ent/summary", "/ent/model", "/ent/graph", "/ent/customers", "/ent/suppliers", "/ent/crosswalk"]:
+    for p in ["/ent/summary", "/ent/model", "/ent/graph", "/ent/customers", "/ent/suppliers", "/ent/crosswalk",
+              "/ent/scenario-data"]:
         total += bake(p)
     customers, suppliers = fetch("/ent/customers"), fetch("/ent/suppliers")
     for c in customers:
@@ -215,6 +216,13 @@ def bake_enterprise() -> int:
                               "ent-model", "ent-crosswalk")]
     asks += [("ent-customer", {"id": c["customer_id"]}) for c in customers[:8]]
     asks += [("ent-supplier", {"id": s["supplier_id"]}) for s in suppliers[:8]]
+    # Scenario presets and use cases: ids are read from the client source so the bake
+    # cannot drift from what the pages offer.
+    client = pathlib.Path(__file__).resolve().parent.parent / "client" / "src"
+    presets = re.findall(r'\{ id: "([a-z0-9-]+)", label:', (client / "lib" / "entScenario.ts").read_text())
+    cases = re.findall(r'\{ id: "(uc-[a-z-]+)", role: "[^"]+", question: "([^"]+)"', (client / "pages" / "ent" / "EntUseCases.tsx").read_text())
+    asks += [("ent-scenario", {"preset": p}) for p in presets]
+    asks += [("ent-usecase", {"id": i, "question": q}) for i, q in cases]
     baked = {}
     for topic, args in asks:
         req = urllib.request.Request(HOST + "/api/ask-cortex", headers={"Content-Type": "application/json"},

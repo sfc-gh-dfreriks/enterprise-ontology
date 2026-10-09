@@ -482,3 +482,7 @@ apiRouter.get("/api/ent/supplier/:id", wrap((req, res) => {
 apiRouter.get("/api/ent/crosswalk", wrap((_req, res) => {
   const e = loadEnterprise(); res.json({ summary: e.crosswalk_summary, records: e.crosswalk, notes: e.notes });
 }));
+apiRouter.get("/api/ent/scenario-data", wrap((_req, res) => {
+  const e = loadEnterprise();
+  res.json({ scenario: e.scenario, companies: e.companies, customers: e.customers, suppliers: e.suppliers });
+}));

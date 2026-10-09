@@ -24,9 +24,13 @@ import EntModel from "./pages/ent/EntModel";
 import EntParty from "./pages/ent/EntParty";
 import EntCrosswalk from "./pages/ent/EntCrosswalk";
 import EntGraph from "./pages/ent/EntGraph";
+import EntScenario from "./pages/ent/EntScenario";
+import EntUseCases from "./pages/ent/EntUseCases";
 
 const TITLES: Record<PageId, string> = {
   "ent-overview": "Enterprise Overview — six 360 apps, one ontology",
+  "ent-usecases": "Management Use Cases — questions only the master ontology can answer",
+  "ent-scenario": "Enterprise Scenario Studio — one shock, six apps",
   "ent-model": "Master Ontology Model — upper classes, golden records, modules",
   "ent-customers": "Customer 360 — golden customers across Finance, Sales, Working Capital and Supply Chain",
   "ent-suppliers": "Supplier 360 — golden suppliers across Spend, Working Capital, Finance and Supply Chain",
@@ -78,6 +82,8 @@ export default function App() {
   const render = () => {
     switch (page) {
       case "ent-overview": return <EntOverview onNavigate={(p) => setPage(p as PageId)} />;
+      case "ent-usecases": return <EntUseCases onNavigate={(p) => setPage(p as PageId)} />;
+      case "ent-scenario": return <EntScenario />;
       case "ent-model": return <EntModel />;
       case "ent-customers": return <EntParty kind="customer" />;
       case "ent-suppliers": return <EntParty kind="supplier" />;

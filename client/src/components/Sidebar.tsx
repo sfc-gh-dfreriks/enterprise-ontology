@@ -2,13 +2,15 @@ import { Network, Workflow, Grid3x3, ShieldCheck, LayoutDashboard, Boxes,
          MessageSquare, Share2, PlayCircle, CloudLightning, Globe2,
          Wrench , Route, Layers, Cable, Building2, Users, Truck, GitMerge} from "lucide-react";
 
-export type PageId = "ent-overview" | "ent-model" | "ent-customers" | "ent-suppliers" | "ent-crosswalk" | "ent-graph"
+export type PageId = "ent-overview" | "ent-usecases" | "ent-scenario" | "ent-model" | "ent-customers" | "ent-suppliers" | "ent-crosswalk" | "ent-graph"
                    | "overview" | "model" | "graph" | "traverse" | "processes" | "usecases"
                    | "correlation" | "coverage" | "ask" | "demo"
                    | "scenario" | "ripple" | "optimize" | "mitigation" | "thread";
 
 const NAV: { id: PageId; label: string; icon: any; group?: string }[] = [
   { id: "ent-overview", label: "Enterprise Overview", icon: Building2, group: "Enterprise ontology" },
+  { id: "ent-usecases", label: "Management Use Cases", icon: Boxes },
+  { id: "ent-scenario", label: "Enterprise Scenario Studio", icon: CloudLightning },
   { id: "ent-model", label: "Master Ontology Model", icon: Layers },
   { id: "ent-customers", label: "Customer 360", icon: Users },
   { id: "ent-suppliers", label: "Supplier 360", icon: Truck },

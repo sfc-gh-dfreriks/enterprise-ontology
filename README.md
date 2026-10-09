@@ -32,6 +32,8 @@ suppliers conform each app's local records, so one question can cross all six ap
 ## Pages
 
 - **Enterprise Overview**
+- **Management Use Cases**
+- **Enterprise Scenario Studio**
 - **Master Ontology Model**
 - **Customer 360**
 - **Supplier 360**
@@ -40,7 +42,7 @@ suppliers conform each app's local records, so one question can cross all six ap
 - **Ask the Enterprise**
 - The original Supply Chain ontology pages (14) are kept as the *Supply Chain module (baseline)*.
 
-Every enterprise page has **Ask Cortex** (9 grounded topics): the server passes the view's facts to
+Every enterprise page has **Ask Cortex** (11 grounded topics): the server passes the view's facts to
 `AI_COMPLETE`. The public build ships the default analysis baked at build time.
 
 ## Build
@@ -56,6 +58,36 @@ python3 tools/bake_static.py
 # Docs and presales kit
 python3 tools/enterprise_facts.py && python3 tools/build_enterprise_kit.py && python3 tools/build_enterprise_decks.py
 ```
+
+## Scenario modelling
+
+The **Enterprise Scenario Studio** propagates one shock through golden-record edges into all six apps. Apps run at
+different scales, so the shock travels as a *share* of activity and each app applies it to its own baseline.
+
+| Preset | Headline | Apps that move |
+|---|---|---|
+| Top-spend supplier fails (8 weeks) | Output value lost $15.89M · Revenue at risk $746K · Pipeline at risk $5.52M | SCM, SAL, FIN, WCP, SPD |
+| Festo fails, 50% dual-sourced | Output value lost $17.50M · Revenue at risk $889K · Pipeline at risk $6.10M | SCM, SAL, FIN, WCP, SPD |
+| San Jose HQ down 4 weeks | Output value lost $15.35M · Revenue at risk $374K · Pipeline at risk $10.54M | SCM, SAL, FIN, WCP |
+| SK Hynix defaults (40% recovery) | Write-off $3.69M · Pipeline lost $4.12M · Order book freed $44.33M | WCP, FIN, SAL, SCM |
+| EUR −10% vs USD | Reported revenue $-1.45M · Reported net income $-332K · Spend in USD $-152K | FIN, SPD, PPL |
+| Pay 10 days later, collect 5 sooner | Cash released $2.00M · CCC change (days) -15 days · At-risk suppliers squeezed 4 | WCP, SPD, SCM |
+| US Operations −5% headcount | Payroll change $-2.60M · Headcount change -22 · Revenue / employee $35K | PPL, FIN, SCM |
+
+## Management use cases
+
+| Role | Question no single 360 app can answer |
+|---|---|
+| CEO / CFO | Which legal entity is weakest across finance, cash, people and delivery? |
+| CPO | Which supplier is cheap to buy from but expensive to depend on? |
+| COO | If our top supplier stops shipping for eight weeks, who feels it and how much? |
+| CPO / COO | What is a second source worth before we pay for it? |
+| COO / CFO | What does a four-week outage at our largest plant cost the enterprise? |
+| CRO / Credit | Which customers are both late to pay and badly served? |
+| CFO / Credit | If our most overdue customer defaults, where does the loss land? |
+| Treasurer | How much cash do longer payment terms release, and which critical suppliers pay for it? |
+| CFO | What does a weaker euro do to reported results, spend and payroll? |
+| CHRO / COO | Where is a headcount reduction safe — and where would it compound a delivery problem? |
 
 ## Read this before demoing
 

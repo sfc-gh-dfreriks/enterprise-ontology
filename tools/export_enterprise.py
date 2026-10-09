@@ -97,9 +97,46 @@ def main():
                    "weight": e["weight"], "module": e["module"]} for e in edges],
     }
 
+    # ------------------------------------------------------------ scenario inputs
+    # Everything the enterprise scenario engine (shared/entScenario.ts) propagates through.
+    # Rates are per week over the measured Supply Chain order period so a shock of N
+    # weeks scales linearly; Working Capital balances are the latest month.
+    period = q("""SELECT MIN(REQUESTED_SHIP_DATE) d0, MAX(REQUESTED_SHIP_DATE) d1,
+                         DATEDIFF(day, MIN(REQUESTED_SHIP_DATE), MAX(REQUESTED_SHIP_DATE)) + 1 days
+                    FROM SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT""")[0]
+    weeks = period["days"] / 7
+    plants = q(f"""SELECT o.PLANT plant, ANY_VALUE(o.PLANT_NAME) name, m.GOLDEN_ID company_code,
+                          SUM(o.NET_VALUE_USD) / {weeks} value_per_week,
+                          SUM(o.ORDER_QTY * o.MARGIN_PER_UNIT_USD) / {weeks} margin_per_week,
+                          COUNT(*) orders, ROUND(100 * COUNT_IF(o.OTIF) / COUNT(*), 1) otif_pct,
+                          SUM(o.LATE_COST_USD) late_cost_usd
+                     FROM SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT o
+                     JOIN SAP_SUPPLY_CHAIN.PLANT.A_PLANT p ON p.PLANT = o.PLANT
+                     JOIN XWALK.COMPANY_MEMBER m ON m.MODULE = 'SCM' AND m.LOCAL_ID = p.COMPANY_CODE
+                    GROUP BY o.PLANT, m.GOLDEN_ID ORDER BY 1""")
+    # share of each plant's built systems that contain at least one lot from the golden supplier
+    supplier_plant = q("""WITH s AS (SELECT PLANT, COUNT(DISTINCT SERIAL_NO) n FROM SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY GROUP BY 1)
+                          SELECT m.GOLDEN_ID supplier_id, g.PLANT plant, COUNT(DISTINCT g.SERIAL_NO) / ANY_VALUE(s.n) share,
+                                 COUNT(DISTINCT IFF(g.INSPECTION_RESULT <> 'Accepted', g.LOT_ID, NULL)) deviating_lots
+                            FROM SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY g
+                            JOIN XWALK.SUPPLIER_MEMBER m ON m.MODULE = 'SCM' AND m.LOCAL_ID = g.SUPPLIER
+                            JOIN s ON s.PLANT = g.PLANT GROUP BY 1, 2 ORDER BY 1, 2""")
+    plant_customer = q("""SELECT SPLIT_PART(SRC_ID, ':', 2) plant, SPLIT_PART(DST_ID, ':', 2) customer_id, WEIGHT value_usd
+                            FROM CORE.KG_EDGE WHERE EDGE_TYPE = 'shipsTo' ORDER BY 1, 3 DESC""")
+    money_edges = q("""SELECT EDGE_TYPE type, SPLIT_PART(SRC_ID, ':', 2) company_code, SPLIT_PART(DST_ID, ':', 2) party_id, WEIGHT value_usd
+                         FROM CORE.KG_EDGE WHERE EDGE_TYPE IN ('buysFrom', 'owesTo', 'sellsToCustomer') ORDER BY 1, 2, 4 DESC""")
+    wc = q("""SELECT COMPANY_CODE company_code, MONTH_END month_end, REVENUE_USD revenue_usd, COGS_USD cogs_usd,
+                     PURCHASES_USD purchases_usd, AR_BALANCE_USD ar_usd, AR_OVERDUE_USD ar_overdue_usd, AP_BALANCE_USD ap_usd,
+                     INVENTORY_USD inventory_usd, NET_WORKING_CAPITAL_USD nwc_usd, DSO dso, DPO dpo, DIO dio, CCC ccc
+                FROM SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI
+             QUALIFY ROW_NUMBER() OVER (PARTITION BY COMPANY_CODE ORDER BY MONTH_END DESC) = 1""")
+    pnl_ccy = q("""SELECT c.GOLDEN_ID company_code, c.CURRENCY currency, c.RATE_TO_USD rate_to_usd FROM XWALK.GOLDEN_COMPANY c""")
+    scenario = {"period": period, "weeks": weeks, "plants": plants, "supplier_plant": supplier_plant,
+                "plant_customer": plant_customer, "money_edges": money_edges, "working_capital": wc, "fx": pnl_ccy}
+
     payload = {"source": DB, "stats": stats, "modules": modules, "classes": classes, "relations": relations,
                "companies": companies, "customers": customers, "suppliers": suppliers, "exposure": exposure,
-               "departments": departments, "crosswalk": crosswalk, "crosswalk_summary": xw_summary, "graph": graph,
+               "departments": departments, "scenario": scenario, "crosswalk": crosswalk, "crosswalk_summary": xw_summary, "graph": graph,
                "notes": {
                    "identity": "Customer and supplier golden records come from a deterministic demo crosswalk "
                                "(the six apps share no keys). A production build would use MDG / match-merge output.",

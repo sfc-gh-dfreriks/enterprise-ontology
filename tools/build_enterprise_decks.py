@@ -25,6 +25,7 @@ from pptx_kit import (  # noqa: E402
 )
 
 FACTS = json.loads(pathlib.Path("/tmp/enterprise_facts.json").read_text())["facts"]
+SC = {s["id"]: s for s in json.loads(pathlib.Path("/tmp/enterprise_scenarios.json").read_text())}
 SHOTS = {s["id"]: s for s in json.loads(pathlib.Path("/tmp/enterprise_shots/manifest.json").read_text())}
 KIT = pathlib.Path.home() / "Documents" / "SAP" / "Enterprise_Ontology_Presales_Kit"
 TOP, BOTTOM, LEFT, RIGHT = 1.32, 5.08, 0.40, 9.50
@@ -179,6 +180,24 @@ def s06_cortex(prs):
     return s
 
 
+def s06b_scenarios(prs):
+    s = content(prs, "One shock, propagated into six apps", "Enterprise Scenario Studio — seven presets, or build your own")
+    picture(s, shot("scenario"), LEFT, TOP + 0.02, 6.1, 3.6)
+    rows = []
+    for sid in ("sup-teledyne", "sup-festo-dual", "plant-sanjose", "cust-skhynix", "terms"):
+        x = SC[sid]; h = x["headline"][0]
+        rows.append((f"{x['label']}: {money(h['value'])} {h['label'].lower()}", 9.5, False, DK1, 4))
+    card(s, LEFT + 6.3, TOP + 0.05, FULLW - 6.3, 3.55, "Presets", rows +
+         [("Shocks travel as shares; each app keeps its own baseline.", 8.5, False, BODY_GREY, 0)], accent=SF_BLUE)
+    return s
+
+
+def s06c_usecases(prs):
+    s = content(prs, "Ten questions no single app can answer", "Management Use Cases — each with a live answer and a scenario")
+    picture(s, shot("usecases"), LEFT, TOP + 0.02, FULLW, 3.6)
+    return s
+
+
 def s07_proof(prs):
     s = content(prs, "The totals reconcile with every source app", "Each source is aggregated to the golden id before joining")
     w = (FULLW - 0.4) / 3
@@ -224,6 +243,9 @@ def s10_next(prs):
 
 # ----------------------------------------------------------------- demo deck
 DEMO = [("overview", "Enterprise Overview", "The three legal entities across all six apps"),
+        ("usecases", "Management Use Cases", "Ten questions that need two or more apps"),
+        ("scenario", "Enterprise Scenario Studio", "One shock, six apps — path, effects, rankings"),
+        ("scenario_cortex", "Ask Cortex on a scenario", "The same engine result, explained and decided"),
         ("model", "Master Ontology Model", "Upper classes, golden classes, one module per app"),
         ("customers", "Customer 360", "Golden customers across Finance, Sales, WC and Supply Chain"),
         ("suppliers", "Supplier 360", "Golden suppliers across Spend, WC, Finance and Supply Chain"),
@@ -252,7 +274,7 @@ def build(name, slides_fn):
 
 def overview(prs):
     return [fn(prs) for fn in (s01_title, s02_problem, s03_model, s04_golden, s05_app, s06_cortex,
-                               s07_proof, s08_regions, s09_caveats, s10_next)]
+                               s06b_scenarios, s06c_usecases, s07_proof, s08_regions, s09_caveats, s10_next)]
 
 
 def demo(prs):

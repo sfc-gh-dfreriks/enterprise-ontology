@@ -30,6 +30,34 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FACTS = json.loads(pathlib.Path("/tmp/enterprise_facts.json").read_text())["facts"]
 KIT = pathlib.Path.home() / "Documents" / "SAP" / "Enterprise_Ontology_Presales_Kit"
 F = FACTS
+# Scenario results come from the app's own engine (client/src/lib/entScenario.ts), exported
+# by running it on the same data the app serves — never re-implemented here.
+SC = json.loads(pathlib.Path("/tmp/enterprise_scenarios.json").read_text())
+_P = json.loads((ROOT / "data" / "enterprise_ontology.json").read_text())["scenario"]["period"]
+PERIOD = f"{_P['d0']} to {_P['d1']}, {_P['days']} days"
+
+
+def hv(h):
+    v = h["value"]
+    return money(v) if h["unit"] == "usd" else (f"{v:.1f}%" if h["unit"] == "pct" else (f"{v:+.0f} days" if h["unit"] == "days" else f"{v:,.0f}"))
+
+
+def scenario_rows():
+    return [[s["label"], " · ".join(f"{h['label']} {hv(h)}" for h in s["headline"][:3]), ", ".join(s["apps"])] for s in SC]
+
+
+USE_CASES = [
+    ("CEO / CFO", "Which legal entity is weakest across finance, cash, people and delivery?"),
+    ("CPO", "Which supplier is cheap to buy from but expensive to depend on?"),
+    ("COO", "If our top supplier stops shipping for eight weeks, who feels it and how much?"),
+    ("CPO / COO", "What is a second source worth before we pay for it?"),
+    ("COO / CFO", "What does a four-week outage at our largest plant cost the enterprise?"),
+    ("CRO / Credit", "Which customers are both late to pay and badly served?"),
+    ("CFO / Credit", "If our most overdue customer defaults, where does the loss land?"),
+    ("Treasurer", "How much cash do longer payment terms release, and which critical suppliers pay for it?"),
+    ("CFO", "What does a weaker euro do to reported results, spend and payroll?"),
+    ("CHRO / COO", "Where is a headcount reduction safe — and where would it compound a delivery problem?"),
+]
 
 MOD_NAME = {"CORE": "Enterprise core", "FIN": "Finance 360", "SAL": "Sales 360", "PPL": "People 360",
             "SPD": "Spend 360", "WCP": "Working Capital 360", "SCM": "Supply Chain 360"}
@@ -129,6 +157,17 @@ python3 tools/bake_static.py
 python3 tools/enterprise_facts.py && python3 tools/build_enterprise_kit.py && python3 tools/build_enterprise_decks.py
 ```
 
+## Scenario modelling
+
+The **Enterprise Scenario Studio** propagates one shock through golden-record edges into all six apps. Apps run at
+different scales, so the shock travels as a *share* of activity and each app applies it to its own baseline.
+
+{md_table(["Preset", "Headline", "Apps that move"], scenario_rows())}
+
+## Management use cases
+
+{md_table(["Role", "Question no single 360 app can answer"], [list(u) for u in USE_CASES])}
+
 ## Read this before demoing
 
 {chr(10).join(f"- **{a}** {b}" for a, b in caveats())}
@@ -213,13 +252,47 @@ Copying from US keeps every region identical.
             n(r.get('kg_nodes', 0)), n(r.get('crosswalk', 0)), money(r.get('spend_usd', 0))] for r in F['regions']])}
 """)
 
+    (docs / "05-scenarios-and-use-cases.md").write_text(f"""# 5. Scenario modelling and use cases
+
+## How the engine works
+
+`client/src/lib/entScenario.ts` is pure and deterministic. The page runs it in the browser (so the public build works
+without Snowflake); the server imports the same file to give Ask Cortex the identical result.
+
+| Scenario | Path through the ontology | Inputs |
+|---|---|---|
+| Supplier failure | Supplier → supplies → Plant → shipsTo → Customer; Plant → ownedBy → LegalEntity; LegalEntity → buysFrom / owesTo → Supplier | weeks out, share covered by an alternate source |
+| Plant outage | Plant → shipsTo → Customer; Plant → ownedBy → LegalEntity; Supplier → supplies → Plant | weeks down |
+| Customer default | LegalEntity → sellsToCustomer → Customer ← shipsTo Plant | recovery % |
+| FX shock | LegalEntity reports in currency | currency, % vs USD |
+| Payment terms | LegalEntity → owesTo → Supplier → supplies → Plant | days later to pay, days sooner to collect |
+| Workforce | LegalEntity → employs → Employee; LegalEntity ← ownedBy Plant | company, % headcount |
+
+**Shares, not summed dollars.** Supply Chain plant value and margin are weekly rates over the measured order period ({PERIOD});
+Finance and Working Capital use their own monthly revenue; Sales uses each customer's CRM pipeline. A lost share of plant
+output becomes the same share of the owning company's revenue and of each affected customer's pipeline.
+
+**Cash conversion cycle** under an output shock is measured against a year of turnover: lost sales of x of the year,
+with receivables and inventory already held, stretch DSO and DIO by x / (1 − x).
+
+## Presets
+
+{md_table(["Preset", "Question", "Headline"], [[s['label'], s['question'], ' · '.join(f"{h['label']} {hv(h)}" for h in s['headline'])] for s in SC])}
+
+## Use cases
+
+{md_table(["Role", "Question"], [list(u) for u in USE_CASES])}
+
+Each card on the *Management Use Cases* page shows the live answer, the ontology path and a button that opens the page or
+runs the scenario, plus its own Ask Cortex.
+""")
     (docs / "04-limits.md").write_text("# 4. Limits and caveats\n\n" + "\n\n".join(f"**{a}** {b}" for a, b in caveats()) + f"""
 
 **Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions use
 *Ask the Enterprise* (Cortex Analyst over `{F['semantic_view']}`). The public build has no Snowflake connection: it shows
 the baked default analysis only.
 """)
-    print("wrote README.md and docs/enterprise/01-04")
+    print("wrote README.md and docs/enterprise/01-05")
 
 
 # ------------------------------------------------------------------ docx
@@ -255,7 +328,8 @@ def doc_start_here():
         ["how it is built, and to install it", "05_Architecture_and_Install.docx"],
         ["regions, links and access", "06_Setup_and_Access.docx"],
         ["slides", "00_Presales_Overview.pptx (10 slides), SAP_Enterprise_Ontology_Demo.pptx (one per page)"],
-        ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4"],
+        ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4 (3 min)"],
+        ["the full deep dive — scenarios and use cases", "SAP_Enterprise_Ontology_Deep_Dive.mp4"],
     ], [3.0, 3.9])
     h2(d, "Read before you demo")
     caveat_block(d)
@@ -285,6 +359,8 @@ def doc_management():
     table(d, ["Supplier", "Customers", "Orders", "Order value exposed"],
           [[r["supplier"], n(r["customers"]), n(r["orders"]), money(r["order_value_usd"])] for r in F["quality_exposure"]],
           [2.6, 1.2, 1.2, 1.9], align_right=(1, 2, 3))
+    h2(d, "Scenario modelling: one shock, six apps")
+    table(d, ["Scenario", "Headline", "Apps"], scenario_rows(), [2.1, 3.6, 1.2])
     h2(d, "Proof it is right")
     table(d, ["Metric", "Source app", "App total", "Enterprise total"],
           [[r["metric"], r["app"], n(r["source"]), n(r["enterprise"])] for r in F["reconciliation"]],
@@ -338,6 +414,8 @@ def doc_quickstart():
     h2(d, "10-minute path")
     for i, t in enumerate([
         "Enterprise Overview — the eight numbers, then the legal-entity table (point at the US OTIF).",
+        "Management Use Cases — pick the question your audience owns; run it.",
+        "Enterprise Scenario Studio — top supplier fails for 8 weeks: path, per-app effects, ranked customers.",
         "Supplier 360 — open the top-spend supplier: spend, AP, lots and the crosswalk members in one record.",
         "Ask Cortex on that supplier — a recommendation that cites Spend, Working Capital and Supply Chain.",
         "Customer 360 — the customers that are both overdue and late.",
@@ -345,6 +423,11 @@ def doc_quickstart():
         "Ask the Enterprise — run one sample question live.",
     ], 1):
         body(d, f"{i}. {t}")
+    h2(d, "Scenario beats (Enterprise Scenario Studio)")
+    table(d, ["Preset", "Say"], [[x["label"], x["summary"]] for x in SC], [2.1, 4.8])
+    h2(d, "Use cases to open with")
+    for role, q in USE_CASES[:5]:
+        bullet(d, f"**{role}** — {q}")
     h2(d, "Questions that land")
     for q in ["Which suppliers have the highest open payables and how much spend do they have?",
               "Which customers have overdue receivables and late-delivery cost at the same time?",

@@ -407,4 +407,5 @@ export const entApi = {
   customer: (id: string) => get<any>(`/ent/customer/${encodeURIComponent(id)}`),
   supplier: (id: string) => get<any>(`/ent/supplier/${encodeURIComponent(id)}`),
   crosswalk: () => get<any>("/ent/crosswalk"),
+  scenarioData: () => get<any>("/ent/scenario-data"),
 };
