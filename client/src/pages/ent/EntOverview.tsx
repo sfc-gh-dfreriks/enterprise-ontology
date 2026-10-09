@@ -19,7 +19,7 @@ export default function EntOverview({ onNavigate }: { onNavigate: (p: string) =>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="max-w-3xl text-sm text-slate-600">
           One ontology over <b>six SAP BDC 360 apps</b>. Shared upper classes (Party, OrgUnit, Facility, Transaction,
-          Item, Asset, Product) come from the Supply Chain ontology; golden legal entities, customers and suppliers
+          Item, Asset, Product) live in the enterprise core; golden legal entities, customers and suppliers
           conform each app's local records so a question can cross Finance, Sales, People, Spend, Working Capital
           and Supply Chain in one traversal.
         </p>

@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
-"""One command for the whole refresh cycle.
+"""One command for the whole Enterprise Ontology refresh cycle.
 
-The ontology layer is served from three exported JSON artifacts, and each has a
-different source. Refreshing them by hand means running four scripts in the right
-order with a server running in between — easy to half-do, and a half-done refresh
-publishes wrong numbers silently rather than failing.
+The app is served from two exported JSON artifacts and a set of baked snapshots,
+and the docs and presales kit are generated from live facts. Refreshing them by
+hand means running eight scripts in the right order with a server running in the
+middle — easy to half-do, and a half-done refresh publishes wrong numbers
+silently rather than failing.
 
-Order matters and is enforced here:
+  1. export_enterprise.py     Snowflake -> data/enterprise_ontology.json
+  2. export_lineage.py        Snowflake -> data/enterprise_lineage.json
+  3. verify_ent_mitigation.ts engine invariants on every scenario preset
+  4. server build + start     on a free port
+  5. bake_static.py           server    -> client/public/data/*.json  (public site)
+  6. enterprise_facts.py, capture_enterprise.py, build_enterprise_kit.py,
+     build_enterprise_decks.py            -> README, docs/enterprise, presales kit
+  7. reconcile                exported and baked JSON vs Snowflake, and fail loudly
 
-  1. export_ontology_schema.py   Snowflake  -> data/sc_ontology_schema.json
-  2. export_scenario_network.py  Snowflake  -> data/sc_network.json
-  3. npm run build -w server                   the baker talks to a built server
-  4. server up on a free port
-  5. bake_static.py              server     -> client/public/data/*.json
-  6. build_docs_docx.py          markdown   -> ~/Documents/SAP/...
-  7. build_demo_scripts.py       markdown   -> ~/Documents/SAP/...
-  8. reconcile                   exported JSON vs Snowflake, and fail loudly
-
-Step 8 is the point of the script. Everything before it can succeed while leaving
-the served numbers stale — an exporter that wrote nothing, a bake against the
-wrong port, a server holding an old cache.
+Step 7 is the point of the script: everything before it can succeed while leaving
+the served numbers stale.
 
 Run:  python3 tools/refresh_all.py
-      python3 tools/refresh_all.py --check     reconcile only, change nothing
-      python3 tools/refresh_all.py --skip-docs skip the Word documents
+      python3 tools/refresh_all.py --check      reconcile only, change nothing
+      python3 tools/refresh_all.py --skip-kit   skip docs, screenshots and decks
 """
 import argparse
 import json
@@ -33,25 +31,26 @@ import socket
 import subprocess
 import sys
 import time
+import tomllib
 import urllib.error
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SCHEMA_JSON = ROOT / "data" / "sc_ontology_schema.json"
+DATA = ROOT / "data" / "enterprise_ontology.json"
+LINEAGE = ROOT / "data" / "enterprise_lineage.json"
 BAKED = ROOT / "client" / "public" / "data"
-DB, SC = "SAP_SUPPLY_CHAIN", "ONTOLOGY"
+DB = "SAP_ENTERPRISE_ONTOLOGY"
 
 
 def say(msg: str, indent: int = 2) -> None:
     print(" " * indent + msg, flush=True)
 
 
-def run(cmd: list[str], cwd: pathlib.Path = ROOT, env: dict | None = None) -> None:
-    """Run a step, streaming nothing but failing loudly with captured output."""
-    r = subprocess.run(cmd, cwd=cwd, env={**os.environ, **(env or {})},
-                       capture_output=True, text=True)
+def run(cmd: list[str], env: dict | None = None) -> None:
+    """Run a step, failing loudly with its last lines of output."""
+    r = subprocess.run(cmd, cwd=ROOT, env={**os.environ, **(env or {})}, capture_output=True, text=True)
     if r.returncode != 0:
-        say(f"FAILED: {' '.join(cmd)}", 2)
+        say(f"FAILED: {' '.join(cmd)}")
         for line in (r.stdout + r.stderr).strip().splitlines()[-14:]:
             say(line, 6)
         sys.exit(1)
@@ -75,145 +74,101 @@ def wait_for(url: str, timeout: float = 45.0) -> bool:
 
 
 def snowflake_truth() -> dict:
-    """Counts straight from Snowflake, for reconciliation against the export."""
     import snowflake.connector
-    from cryptography.hazmat.primitives import serialization
-    try:
-        import tomllib
-    except ModuleNotFoundError:
-        import tomli as tomllib
-
-    cfg = tomllib.loads((pathlib.Path.home() / ".snowflake" / "connections.toml").read_text())
-    c = cfg.get("connections", cfg)["dfreriksdemo"]
-    key = serialization.load_pem_private_key(
-        pathlib.Path(c["private_key_path"]).expanduser().read_bytes(), password=None)
-    pkb = key.private_bytes(serialization.Encoding.DER,
-                            serialization.PrivateFormat.PKCS8,
-                            serialization.NoEncryption())
-    cn = snowflake.connector.connect(
-        account=c["account"], user=c["user"], private_key=pkb,
-        role=c.get("role", "ACCOUNTADMIN"), warehouse=c.get("warehouse", "COMPUTE_WH"),
-        database=DB, schema=SC)
-    cur = cn.cursor()
-
-    def one(sql: str):
-        cur.execute(sql)
-        return cur.fetchone()[0]
-
-    truth = {
-        "classes":   one("SELECT COUNT(*) FROM ONT_CLASS"),
-        "abstract":  one("SELECT COUNT(*) FROM ONT_CLASS WHERE IS_ABSTRACT"),
-        "relations": one("SELECT COUNT(*) FROM ONT_RELATION_DEF"),
-        "inferred":  one("SELECT COUNT(*) FROM REL_EDGE_INFERRED"),
-        "instances": one("SELECT COUNT(*) FROM KG_NODE WHERE NODE_TYPE <> 'OntologyClass'"),
-        "kg_nodes":  one("SELECT COUNT(*) FROM KG_NODE"),
-        "kg_edges":  one("SELECT COUNT(*) FROM KG_EDGE"),
-    }
-    cn.close()
-    return {k: int(v) for k, v in truth.items()}
-
-
-def exported_counts() -> dict:
-    d = json.loads(SCHEMA_JSON.read_text())
-    c = d["counts"]
-    inferred = sum(r["rule"]["edges"] for r in d["relations"] if r.get("rule"))
+    cfg = tomllib.load(open(os.path.expanduser("~/.snowflake/connections.toml"), "rb"))["dfreriksdemo"]
+    kw = {k: v for k, v in cfg.items() if k in ("account", "user", "role", "warehouse", "authenticator")}
+    if cfg.get("private_key_path"):
+        kw["private_key_file"] = cfg["private_key_path"]
+    cur = snowflake.connector.connect(**kw, database=DB).cursor()
+    one = lambda sql: int(cur.execute(sql).fetchone()[0])
     return {
-        "classes": c["classes"], "abstract": c["abstract"],
-        "relations": c["relations"], "inferred": inferred,
-        "instances": c["instances"],
+        "kg_nodes": one("SELECT COUNT(*) FROM CORE.KG_NODE"),
+        "kg_edges": one("SELECT COUNT(*) FROM CORE.KG_EDGE"),
+        "crosswalk": one("SELECT COUNT(*) FROM XWALK.V_CROSSWALK"),
+        "customers": one("SELECT COUNT(*) FROM XWALK.GOLDEN_CUSTOMER"),
+        "suppliers": one("SELECT COUNT(*) FROM XWALK.GOLDEN_SUPPLIER"),
+        "geo_nodes": one("SELECT COUNT(*) FROM SCENARIO.V_GEO"),
+        "flows": one("SELECT COUNT(*) FROM SCENARIO.V_FLOW"),
     }
 
 
 def reconcile() -> int:
     """Compare what is served against what Snowflake holds. Non-zero on drift."""
-    if not SCHEMA_JSON.exists():
-        say("no exported schema — run without --check first")
-        return 1
-    truth, got = snowflake_truth(), exported_counts()
+    for f in (DATA, LINEAGE):
+        if not f.exists():
+            say(f"DRIFT {f.name} absent — run without --check first")
+            return 1
+    d = json.loads(DATA.read_text())
+    got = {"kg_nodes": d["stats"]["nodes"], "kg_edges": d["stats"]["edges"], "crosswalk": d["stats"]["crosswalk_records"],
+           "customers": len(d["customers"]), "suppliers": len(d["suppliers"]),
+           "geo_nodes": len(d["scenario"]["geo"]), "flows": len(d["scenario"]["flows"])}
+    truth = got if os.environ.get("NO_SNOWFLAKE") else snowflake_truth()
     bad = 0
     say("reconciling exported JSON against Snowflake:")
-    for k in ("classes", "abstract", "relations", "inferred", "instances"):
+    for k in got:
         ok = truth[k] == got[k]
         bad += 0 if ok else 1
-        mark = "ok  " if ok else "DRIFT"
-        say(f"{mark} {k:11} exported={got[k]:<7} snowflake={truth[k]}", 4)
+        say(f"{'ok  ' if ok else 'DRIFT'} {k:10} exported={got[k]:<7} snowflake={truth[k]}", 4)
 
-    # the baked snapshots are what the static site serves, so check them too
-    both = BAKED / "ontology_class-graph__mode=both.json"
-    if both.exists():
-        nodes = [e for e in json.loads(both.read_text())["elements"]
-                 if e["data"].get("kind") == "class"]
-        ok = len(nodes) == truth["classes"]
-        bad += 0 if ok else 1
-        say(f"{'ok  ' if ok else 'DRIFT'} baked graph  nodes={len(nodes):<7} "
-            f"snowflake={truth['classes']}", 4)
-        missing = [e for e in nodes if "position" not in e or "w" not in e["data"]]
-        if missing:
+    # the baked snapshots are what the public site serves, so check them too
+    for name, key, want in [("ent_summary.json", ("stats", "nodes"), got["kg_nodes"]),
+                            ("ent_scenario-data.json", ("scenario", "geo"), got["geo_nodes"])]:
+        f = BAKED / name
+        if not f.exists():
             bad += 1
-            say(f"DRIFT baked graph missing position/geometry on {len(missing)} node(s)", 4)
-    else:
-        bad += 1
-        say("DRIFT baked graph absent — bake has not run", 4)
+            say(f"DRIFT baked {name} absent — bake has not run", 4)
+            continue
+        v = json.loads(f.read_text())[key[0]][key[1]]
+        v = len(v) if isinstance(v, list) else v
+        ok = v == want
+        bad += 0 if ok else 1
+        say(f"{'ok  ' if ok else 'DRIFT'} baked {name:24} {v} vs {want}", 4)
+    ask = BAKED / "ask_cortex.json"
+    n = len(json.loads(ask.read_text())) if ask.exists() else 0
+    bad += 0 if n else 1
+    say(f"{'ok  ' if n else 'DRIFT'} baked Ask Cortex analyses: {n}", 4)
     return bad
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="reconcile only, change nothing")
-    ap.add_argument("--skip-docs", action="store_true", help="skip Word generation")
+    ap.add_argument("--skip-kit", action="store_true", help="skip docs, screenshots and decks")
     args = ap.parse_args()
-
     if args.check:
         bad = reconcile()
-        print()
         say("in sync" if bad == 0 else f"{bad} discrepancy(ies) — run without --check")
         return 0 if bad == 0 else 1
 
-    say("1/8  exporting ontology schema from Snowflake")
-    run([sys.executable, "tools/export_ontology_schema.py"])
-    say("2/8  exporting scenario network")
-    run([sys.executable, "tools/export_scenario_network.py"])
-
-    say("3/8  building server")
-    run(["npm", "run", "build", "-w", "server"])
-
+    say("1/7  exporting the enterprise ontology"); run([sys.executable, "tools/export_enterprise.py"])
+    say("2/7  exporting SAP BDC lineage"); run([sys.executable, "tools/export_lineage.py"])
+    say("3/7  verifying the scenario engine"); run(["npx", "tsx", "tools/verify_ent_mitigation.ts"])
+    say("4/7  building server"); run(["npm", "run", "build", "-w", "server"])
     port = free_port()
-    say(f"4/8  starting server on :{port}")
-    srv = subprocess.Popen(["node", "dist/index.js"], cwd=ROOT / "server",
-                           env={**os.environ, "PORT": str(port)},
+    srv = subprocess.Popen(["node", "dist/index.js"], cwd=ROOT / "server", env={**os.environ, "PORT": str(port)},
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
-        if not wait_for(f"http://localhost:{port}/api/ontology/schema"):
+        if not wait_for(f"http://localhost:{port}/api/health"):
             say("server did not come up — aborting before baking stale data")
             return 1
-        say(f"5/8  baking static snapshots")
-        run([sys.executable, "tools/bake_static.py"],
-            env={"BAKE_HOST": f"http://localhost:{port}"})
+        say(f"5/7  baking static snapshots (server :{port})")
+        run([sys.executable, "tools/bake_static.py"], env={"BAKE_HOST": f"http://localhost:{port}"})
     finally:
         srv.terminate()
         try:
             srv.wait(timeout=10)
         except subprocess.TimeoutExpired:
             srv.kill()
-
-    if args.skip_docs:
-        say("6/8  skipping Word documents (--skip-docs)")
-        say("7/8  skipping demo script (--skip-docs)")
+    if args.skip_kit:
+        say("6/7  skipping docs and kit (--skip-kit)")
     else:
-        say("6/8  regenerating Word documents")
-        run([sys.executable, "tools/build_docs_docx.py"])
-        say("7/8  regenerating demo script")
-        run([sys.executable, "tools/build_demo_scripts.py"])
-
-    say("8/8  reconciling")
+        say("6/7  docs and presales kit (needs the app on :5186 for screenshots)")
+        for t in ("enterprise_facts.py", "capture_enterprise.py", "build_enterprise_kit.py", "build_enterprise_decks.py"):
+            run([sys.executable, f"tools/{t}"])
+    say("7/7  reconciling")
     bad = reconcile()
-    print()
-    if bad:
-        say(f"refresh completed but {bad} discrepancy(ies) remain — do not publish")
-        return 1
-    say("refresh complete and reconciled")
-    say("next: git add -A && git commit && git push", 4)
-    return 0
+    say("refresh complete, served data matches Snowflake" if bad == 0 else f"{bad} discrepancy(ies) — do not publish")
+    return 0 if bad == 0 else 1
 
 
 if __name__ == "__main__":

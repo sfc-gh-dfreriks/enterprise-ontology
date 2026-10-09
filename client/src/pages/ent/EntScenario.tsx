@@ -3,6 +3,8 @@ import { useQuery } from "../../hooks/useQuery";
 import { entApi, STATIC } from "../../lib/api";
 import { runScenario, PRESETS, fmt, type Scenario } from "../../lib/entScenario";
 import { AskCortex } from "../../components/AskCortex";
+import { pickScenario, useActiveScenario } from "../../hooks/useActiveScenario";
+import { ScenarioTabs } from "../../components/EntScenarioBits";
 import { Panel, RankBars, ModuleChips, MODULE_COLOR, MODULE_NAME, Caveat, num } from "../../components/EntBits";
 
 const KINDS: { kind: Scenario["kind"]; label: string; hint: string }[] = [
@@ -23,20 +25,21 @@ function val(v: number | null, unit: string) {
 }
 
 /** Enterprise Scenario Studio: one shock, propagated through golden-record edges into all six apps. */
-export default function EntScenario() {
+export default function EntScenario({ onNavigate }: { onNavigate: (p: string) => void }) {
   const data = useQuery(() => entApi.scenarioData(), []);
-  // A use case can hand the studio a preset to open on. Read in the initialiser, cleared
-  // in an effect: StrictMode runs initialisers twice, so clearing there would lose it.
-  const [handoff] = useState(() => PRESETS.find((x) => x.id === sessionStorage.getItem("ent.preset")) ?? PRESETS[0]);
-  useEffect(() => { sessionStorage.removeItem("ent.preset"); }, []);
-  const [presetId, setPresetId] = useState<string | null>(handoff.id);
-  const [spec, setSpec] = useState<Scenario>(handoff.scenario);
+  // The scenario is shared with Impact Map, Risk Outcome and Mitigation. A use case can
+  // hand the studio a preset: read once, cleared in an effect (StrictMode runs effects twice
+  // in dev, so the read happens in the initialiser).
+  const [handoff] = useState(() => PRESETS.find((x) => x.id === sessionStorage.getItem("ent.preset")));
+  useEffect(() => { if (handoff) { pickScenario(handoff.id, handoff.scenario); sessionStorage.removeItem("ent.preset"); } }, [handoff]);
+  const [active] = useActiveScenario();
+  const presetId = active.presetId, spec = active.spec;
   const result = useMemo(() => (data.data ? runScenario(data.data, spec) : null), [data.data, spec]);
   if (data.loading) return <p className="text-sm text-slate-500">Loading scenario inputs…</p>;
   if (data.error) return <p className="text-sm text-rose-600">{data.error}</p>;
   const d = data.data!;
-  const pick = (p: (typeof PRESETS)[number]) => { setPresetId(p.id); setSpec(p.scenario); };
-  const edit = (s: Scenario) => { setPresetId(null); setSpec(s); };
+  const pick = (p: (typeof PRESETS)[number]) => pickScenario(p.id, p.scenario);
+  const edit = (s: Scenario) => pickScenario(null, s);
   const defaults: Record<Scenario["kind"], Scenario> = {
     supplier: { kind: "supplier", supplierId: d.suppliers[0].supplier_id, weeks: 8, mitigationPct: 0 },
     plant: { kind: "plant", plant: d.scenario.plants[0].plant, weeks: 4 },
@@ -56,6 +59,7 @@ export default function EntScenario() {
 
   return (
     <div className="space-y-4">
+      <ScenarioTabs page="ent-scenario" onNavigate={onNavigate} />
       <p className="max-w-4xl text-sm text-slate-600">
         Pick a shock. The engine walks the master ontology — <i>supplies</i>, <i>shipsTo</i>, <i>ownedBy</i>, <i>buysFrom</i>,
         <i> owesTo</i>, <i>sellsToCustomer</i>, <i>employs</i> — and shows what each of the six apps would see. Apps run at
@@ -122,8 +126,15 @@ export default function EntScenario() {
         <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div><h2 className="text-lg font-bold text-slate-800">{r.title}</h2><p className="text-sm text-slate-600">{r.summary}</p></div>
+            <div className="flex flex-col items-end gap-2">
             <AskCortex key={JSON.stringify(askArgs)} topic="ent-scenario" args={askArgs} label="Ask Cortex about this scenario"
               suggestions={["What should we decide this week?", "Which app shows the problem first?", "What would reduce the impact most?"]} />
+            <div className="flex gap-2 text-xs">
+              <button onClick={() => onNavigate("ent-impact")} className="rounded-md border border-sky-300 bg-sky-50 px-2.5 py-1 font-semibold text-sky-700 hover:bg-sky-100">Impact map →</button>
+              <button onClick={() => onNavigate("ent-risk")} className="rounded-md border border-orange-300 bg-orange-50 px-2.5 py-1 font-semibold text-orange-700 hover:bg-orange-100">Risk outcome →</button>
+              <button onClick={() => onNavigate("ent-mitigation")} className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 hover:bg-emerald-100">Mitigation →</button>
+            </div>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {r.headline.map((h) => (

@@ -7,10 +7,12 @@ SAP_ENTERPRISE_ONTOLOGY
   CORE       ONT_CLASS / ONT_RELATION_DEF / ONT_MODULE, KG_NODE / KG_EDGE, VW_ONT_* views
   XWALK      GOLDEN_COMPANY / CUSTOMER / SUPPLIER / DEPARTMENT, *_MEMBER, V_CROSSWALK
   ANALYTICS  DT_COMPANY_360, DT_CUSTOMER_360, DT_SUPPLIER_360   (3 dynamic tables, 1-day lag)
+  SCENARIO   V_GEO, V_FLOW, V_PLANT_CAPACITY, V_PLANT_BUFFER, V_SUBSTITUTION   (from Supply Chain 360 tables)
   SEMANTIC   SAP_ENTERPRISE_360       AGENTS   SAP_ENTERPRISE_ANALYST
         │
-tools/export_enterprise.py → data/enterprise_ontology.json → Express API (3011) → React (5186)
-                                                          └→ tools/bake_static.py → GitHub Pages
+tools/export_enterprise.py → data/enterprise_ontology.json ┐
+tools/export_lineage.py    → data/enterprise_lineage.json  ┴→ Express API (3011) → React (5186)
+                                                            └→ tools/bake_static.py → GitHub Pages
 ```
 
 **Aggregate before join.** Every source is summed to the golden id first, then joined, so a one-to-many crosswalk

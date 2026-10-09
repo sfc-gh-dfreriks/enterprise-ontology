@@ -50,3 +50,31 @@ with receivables and inventory already held, stretch DSO and DIO by x / (1 − x
 
 Each card on the *Management Use Cases* page shows the live answer, the ontology path and a button that opens the page or
 runs the scenario, plus its own Ask Cortex.
+
+## Impact, risk and mitigation
+
+`client/src/lib/entImpact.ts` builds on the scenario result, so every figure reconciles to the Studio.
+
+- **Impact Map** — the same propagation as nodes and hops. Plants, suppliers and customers are placed at their Supply Chain 360
+  addresses; legal entities at their first plant (an assumption). Timing uses each plant's minimum days of inventory.
+- **Risk Outcome** — each app graded against its own base (Low < 1%, Moderate 1–5%, High 5–15%, Critical ≥ 15%), a
+  time-to-impact view, single points of failure (single-source suppliers, sole-maker plants) and a register. Inherent
+  and residual risk side by side.
+- **Mitigation & Recovery** — levers *from data*: run on stock held, reroute a category only to a plant that has shipped it and
+  only within its free work-center hours (a plant fed by the failed supplier is excluded), hold payables, pause POs,
+  collect overdue receivables. Levers that are *assumptions* are labelled: second source, hedge ratio, credit insurance,
+  re-sale of freed capacity, plant-facing share of a headcount cut. Re-sold capacity is new margin, never netted
+  against a write-off.
+
+| Preset | At risk | Protected | Still exposed | Risk | First action |
+|---|---|---|---|---|---|
+| Top-spend supplier fails (8 weeks) | $15.89M | $8.80M (55%) | $7.09M | Critical → Critical | Build from stock at Austin Fab |
+| Festo fails, 50% dual-sourced | $17.50M | $7.96M (45%) | $9.54M | Critical → Critical | Build from stock at Austin Fab |
+| San Jose HQ down 4 weeks | $15.35M | $6.70M (44%) | $8.65M | Critical → Critical | Move Inspection Systems from San Jose HQ to Austin Fab |
+| SK Hynix defaults (40% recovery) | $3.69M | $0 (0%) | $3.69M | Critical → Critical | Place the freed order book with other customers |
+| EUR −10% vs USD | $332K | $166K (50%) | $166K | High → Moderate | Hedge 50% of EUR net income |
+| Pay 10 days later, collect 5 sooner | $27.33M | $27.33M (100%) | $0 | Critical → Low | Keep current terms for 6 critical suppliers |
+| US Operations −5% headcount | $2.60M | $780K (30%) | $1.82M | Moderate → Moderate | Exempt plant roles at San Jose HQ |
+
+`tools/verify_ent_mitigation.ts` checks every preset: protected + residual = at risk, exposure equals the Studio's output
+lost, reroutes stay within free hours and capable plants, and mitigation never raises the risk band.

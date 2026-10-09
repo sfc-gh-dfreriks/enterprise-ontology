@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { runSql } from "./analyst.js";
 import { runScenario, PRESETS, type Scenario } from "../lib/entScenario.js";
+import { analyse } from "../lib/entImpact.js";
 
 const MODEL = process.env.SCENARIO_LLM_MODEL ?? "claude-4-sonnet";
 let _e: any = null;
@@ -19,6 +20,17 @@ export function loadEnterprise(): any {
   if (!fs.existsSync(f)) throw new Error(`Enterprise ontology not found at ${f}. Run tools/export_enterprise.py.`);
   _e = JSON.parse(fs.readFileSync(f, "utf-8"));
   return _e;
+}
+
+let _l: any = null;
+
+/** SAP BDC lineage, from data/enterprise_lineage.json (tools/export_lineage.py). */
+export function loadLineage(): any {
+  if (_l) return _l;
+  const f = path.resolve(import.meta.dirname, "../../../data/enterprise_lineage.json");
+  if (!fs.existsSync(f)) throw new Error(`Enterprise lineage not found at ${f}. Run tools/export_lineage.py.`);
+  _l = JSON.parse(fs.readFileSync(f, "utf-8"));
+  return _l;
 }
 
 export function summary() {
@@ -58,6 +70,13 @@ function factsFor(topic: string, a: Record<string, any>): unknown {
   const e = loadEnterprise();
   switch (topic) {
     case "ent-overview": return { stats: e.stats, modules: e.modules, companies: e.companies, notes: e.notes };
+    case "ent-lineage": {
+      const l = loadLineage();
+      return { counts: l.counts, notes: l.notes, layers: l.layers,
+               modules: l.modules.map((m: any) => ({ code: m.code, name: m.name, bdcProducts: m.bdcProducts,
+                 sources: m.products.map((r: any) => ({ source: r.source, provenance: r.provenanceLabel,
+                   dataProduct: r.dataProduct, rows: r.rows, appObject: r.appObject, readBy: r.enterpriseObjects })) })) };
+    }
     case "ent-companies": return { companies: e.companies, notes: e.notes };
     case "ent-customer": return customer(String(a.id)) ?? { error: "customer not found" };
     case "ent-supplier": return supplier(String(a.id)) ?? { error: "supplier not found" };
@@ -76,13 +95,29 @@ function factsFor(topic: string, a: Record<string, any>): unknown {
       if (!spec) return { error: "unknown scenario" };
       return { scenario: spec, result: runScenario(e, spec), notes: e.notes };
     }
+    case "ent-impact": case "ent-risk": case "ent-mitigation": {
+      // Same engine, same spec and levers as the page — Cortex reads what is on screen.
+      const raw = typeof a.scenario === "string" ? JSON.parse(a.scenario) : a.scenario;
+      const spec = (a.preset ? PRESETS.find((p) => p.id === a.preset)?.scenario : raw) as Scenario | undefined;
+      if (!spec) return { error: "unknown scenario" };
+      const levers = typeof a.levers === "string" ? JSON.parse(a.levers) : a.levers;
+      const x = analyse(e, spec, levers);
+      const base = { scenario: spec, title: x.result.title, headline: x.result.headline, assumptions: x.result.assumptions, notes: e.notes };
+      if (topic === "ent-impact") return { ...base, steps: x.impact.steps.map(({ hop, title, narrative }) => ({ hop, title, narrative })),
+        reached: Object.entries(x.impact.nodeHits).map(([id, h]) => ({ id, name: x.impact.nodes.find((n) => n.id === id)?.name, ...h })) };
+      if (topic === "ent-risk") return { ...base, inherent: x.riskBefore, residual: { overall: x.riskAfter.overall, score: x.riskAfter.score, apps: x.riskAfter.apps },
+        mitigation: { atRiskUsd: x.mitigation.atRiskUsd, protectedUsd: x.mitigation.protectedUsd, residualUsd: x.mitigation.residualUsd } };
+      return { ...base, mitigation: { ...x.mitigation, before: undefined, after: undefined },
+        effects_before_after: x.mitigation.before.map((b, i) => ({ module: b.module, metric: b.metric, before: b.delta, after: x.mitigation.after[i].delta })),
+        risk: { inherent: x.riskBefore.overall, residual: x.riskAfter.overall } };
+    }
     case "ent-usecase": return { usecase: a.id, question: a.question, companies: e.companies, top_customers: e.customers.slice(0, 8),
       top_suppliers: e.suppliers.slice(0, 8), exposure: e.exposure.slice(0, 12), notes: e.notes };
     default: throw new Error(`unknown topic ${topic}`);
   }
 }
 
-export const ENTERPRISE_TOPICS = ["ent-overview", "ent-companies", "ent-customer", "ent-supplier", "ent-customers",
+export const ENTERPRISE_TOPICS = ["ent-overview", "ent-lineage", "ent-impact", "ent-risk", "ent-mitigation", "ent-companies", "ent-customer", "ent-supplier", "ent-customers",
   "ent-suppliers", "ent-model", "ent-crosswalk", "ent-people", "ent-scenario", "ent-usecase"];
 
 export async function askEnterprise(topic: string, a: Record<string, any>, question: string): Promise<string> {

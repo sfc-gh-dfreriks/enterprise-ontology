@@ -131,8 +131,22 @@ def main():
                 FROM SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI
              QUALIFY ROW_NUMBER() OVER (PARTITION BY COMPANY_CODE ORDER BY MONTH_END DESC) = 1""")
     pnl_ccy = q("""SELECT c.GOLDEN_ID company_code, c.CURRENCY currency, c.RATE_TO_USD rate_to_usd FROM XWALK.GOLDEN_COMPANY c""")
+    # Impact maps, risk and mitigation (sql/enterprise/06_scenario_network.sql — Supply Chain 360 data only)
+    geo = q("""SELECT GOLDEN_ID id, NODE_TYPE type, NODE_NAME name, CITY city, COUNTRY country, LATITUDE lat, LONGITUDE lon,
+                      PLANT plant, LOCATION_ASSUMED location_assumed FROM SCENARIO.V_GEO ORDER BY NODE_TYPE, GOLDEN_ID""")
+    flows = q("""SELECT FLOW_ID id, FLOW_TYPE type, MATERIAL_CATEGORY category, MONTHLY_VOLUME volume, MONTHLY_VALUE value_usd,
+                        SOURCE_ID source, TARGET_ID target, SOURCE_PLANT source_plant, TARGET_PLANT target_plant
+                   FROM SCENARIO.V_FLOW ORDER BY FLOW_ID""")
+    capacity = q("""SELECT PLANT plant, AVAILABLE_HRS available_hrs, USED_HRS used_hrs, FREE_HRS free_hrs, HEADROOM_PCT headroom_pct,
+                           UTILIZATION_PCT utilization_pct, UNITS_SHIPPED units_shipped, HRS_PER_UNIT hrs_per_unit
+                      FROM SCENARIO.V_PLANT_CAPACITY ORDER BY PLANT""")
+    buffer = q("""SELECT PLANT plant, MIN_DAYS_OF_INVENTORY min_days, AVG_DAYS_OF_INVENTORY avg_days, STOCK_VALUE stock_value_usd
+                    FROM SCENARIO.V_PLANT_BUFFER ORDER BY PLANT""")
+    substitution = q("""SELECT MATERIAL_CATEGORY category, PLANT plant, VOLUME volume, VALUE value_usd, CAPABLE_PLANTS capable_plants
+                          FROM SCENARIO.V_SUBSTITUTION ORDER BY 1, 2""")
     scenario = {"period": period, "weeks": weeks, "plants": plants, "supplier_plant": supplier_plant,
-                "plant_customer": plant_customer, "money_edges": money_edges, "working_capital": wc, "fx": pnl_ccy}
+                "plant_customer": plant_customer, "money_edges": money_edges, "working_capital": wc, "fx": pnl_ccy,
+                "geo": geo, "flows": flows, "capacity": capacity, "buffer": buffer, "substitution": substitution}
 
     payload = {"source": DB, "stats": stats, "modules": modules, "classes": classes, "relations": relations,
                "companies": companies, "customers": customers, "suppliers": suppliers, "exposure": exposure,

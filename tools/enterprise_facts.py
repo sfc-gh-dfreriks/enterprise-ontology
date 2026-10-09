@@ -113,6 +113,7 @@ def main():
         "crosswalk": f"SELECT COUNT(*) FROM {DB}.XWALK.V_CROSSWALK",
         "spend_usd": f"SELECT ROUND(SUM(SPEND_USD)) FROM {DB}.ANALYTICS.DT_COMPANY_360",
         "late_cost_usd": f"SELECT SUM(LATE_COST_USD) FROM {DB}.ANALYTICS.DT_CUSTOMER_360",
+        "geo_nodes": f"SELECT COUNT(*) FROM {DB}.SCENARIO.V_GEO",
     }
     regions = []
     base = {k: one(us, s) for k, s in checks.items()}
@@ -130,7 +131,13 @@ def main():
     # From the app's own source, so page and topic counts can't be misquoted.
     sidebar = (ROOT / "client/src/components/Sidebar.tsx").read_text()
     f["enterprise_pages"] = re.findall(r'id: "(?:ent-[a-z]+|ask)", label: "([^"]+)"', sidebar)
-    f["scm_pages"] = len(re.findall(r'\{ id: "[a-z]+", label:', sidebar)) - 1  # minus "ask"
+    # SAP BDC lineage, as the BDC Lineage page shows it (tools/export_lineage.py)
+    lin = json.loads((ROOT / "data/enterprise_lineage.json").read_text())
+    f["lineage"] = {"counts": lin["counts"], "generated_at": lin["generated_at"], "notes": lin["notes"],
+                    "modules": [{"code": m["code"], "name": m["name"], "bdc_products": m["bdcProducts"],
+                                 "app_objects": sorted({r["appObject"] for r in m["products"]}),
+                                 "provenance": sorted({r["provenanceLabel"] for r in m["products"]})} for m in lin["modules"]]}
+    f["scenario_views"] = q("scenario_views", f"""SELECT COUNT(*) FROM {DB}.INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = 'SCENARIO'""")
     ent = (ROOT / "server/src/services/enterprise.ts").read_text()
     f["ask_topics"] = len(re.findall(r'case "ent-', ent))
     f["fx"] = q("fx", "SELECT CURRENCY, RATE_TO_USD FROM SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY ORDER BY 1", rows)
@@ -140,7 +147,7 @@ def main():
     if "--print" in sys.argv:
         for k in ("classes", "relations", "kg_nodes", "kg_edges", "dangling_edges", "crosswalk_records",
                   "revenue_usd", "headcount", "spend_usd", "late_cost_usd", "four_app_customers",
-                  "four_app_suppliers", "dynamic_tables", "ask_topics", "enterprise_pages", "scm_pages"):
+                  "four_app_suppliers", "dynamic_tables", "ask_topics", "enterprise_pages", "scenario_views"):
             print(f"  {k:22} {f[k]}")
         for r in f["regions"]:
             print("  region", r)

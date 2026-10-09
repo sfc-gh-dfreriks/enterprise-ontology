@@ -46,6 +46,29 @@ def scenario_rows():
     return [[s["label"], " · ".join(f"{h['label']} {hv(h)}" for h in s["headline"][:3]), ", ".join(s["apps"])] for s in SC]
 
 
+def mitigation_rows():
+    """Impact, risk and mitigation per preset, from the same engine the pages run."""
+    out = []
+    for s in SC:
+        m, r = s["mitigation"], s["risk"]
+        share = f"{100 * m['protected'] / m['at_risk']:.0f}%" if m["at_risk"] else "—"
+        out.append([s["label"], money(m["at_risk"]), f"{money(m['protected'])} ({share})", money(m["residual"]),
+                    f"{r['inherent']} → {r['residual']}", m["top_action"] or "—"])
+    return out
+
+
+MIT_HEAD = ["Preset", "At risk", "Protected", "Still exposed", "Risk", "First action"]
+LIN = F["lineage"]
+
+
+def lineage_rows():
+    return [[m["name"], ", ".join(m["bdc_products"]) or "— (BDC-shaped tables)", len(m["app_objects"]), "; ".join(m["provenance"])]
+            for m in LIN["modules"]]
+
+
+LIN_HEAD = ["360 app", "SAP BDC data products", "Objects read", "Provenance"]
+
+
 USE_CASES = [
     ("CEO / CFO", "Which legal entity is weakest across finance, cash, people and delivery?"),
     ("CPO", "Which supplier is cheap to buy from but expensive to depend on?"),
@@ -74,17 +97,18 @@ def pct(v):
 # ------------------------------------------------------------------ shared text
 def eight_numbers():
     us = next(c for c in F["companies"] if c["company"] == "US Operations")
-    exp = F["quality_exposure"][0]
+    top = SC[0]
     return [
-        (f"{F['classes']} classes, {F['relations']} relations", "one ontology over six 360 apps, Supply Chain ontology as baseline"),
+        (f"{F['classes']} classes, {F['relations']} relations", "one ontology over six 360 apps"),
         (f"{n(F['kg_nodes'])} nodes / {n(F['kg_edges'])} edges", f"knowledge graph, {F['dangling_edges']} dangling edges"),
         (f"{n(F['crosswalk_records'])} records → {F['golden_customers'] + F['golden_suppliers']} golden",
          f"{F['golden_customers']} customers and {F['golden_suppliers']} suppliers conformed across apps"),
         (f"{F['four_app_customers']} customers in 4 apps", "Finance, Sales, Working Capital and Supply Chain see the same account"),
         (money(F["revenue_usd"]), f"revenue across {F['golden_companies']} legal entities (Finance 360, USD)"),
         (f"{pct(us['otif_pct'])} OTIF", f"US Operations — the weakest entity; {money(us['late_cost_usd'])} late cost"),
-        (money(exp["order_value_usd"]), f"customer orders containing {exp['supplier']} deviating lots"),
-        ("3 regions, parity", "US, EU, APAC each rebuilt and checked against US totals"),
+        (f"{LIN['counts']['bdcProducts']} SAP BDC data products", f"traced through the six 360 apps into the ontology ({LIN['counts']['appObjects']} app objects read)"),
+        (f"{100 * top['mitigation']['protected'] / top['mitigation']['at_risk']:.0f}% protected",
+         f"of {money(top['mitigation']['at_risk'])} at risk when the top supplier fails — the rest cannot be rerouted"),
     ]
 
 
@@ -99,7 +123,9 @@ def caveats():
         ("Scale between apps.", "Sales 360 order values come from the BDC demo tenant and are far larger than the Supply Chain demo "
          "orders. Compare within an app, not across."),
         ("Company mapping.", "Supply Chain plants carry company codes 1000/2000/3000; they are mapped to US, EU and Japan "
-         "Operations by region."),
+         "Operations by region. On the maps each legal entity sits at its first plant."),
+        ("Mitigation.", "Reroutes, stock cover and capacity come from Supply Chain 360 data and are planning grade. Second source, "
+         "hedging, insurance and re-sale are labelled assumptions you set."),
     ]
 
 
@@ -120,8 +146,8 @@ def write_markdown():
     (ROOT / "README.md").write_text(f"""# SAP Enterprise Ontology
 
 A **master ontology over six SAP BDC 360 applications** — Finance, Sales, People, Spend, Working Capital and
-Supply Chain — built on the Supply Chain ontology as its baseline. Golden legal entities, customers and
-suppliers conform each app's local records, so one question can cross all six apps in a single traversal.
+Supply Chain. Golden legal entities, customers and suppliers conform each app's local records, so one question
+can cross all six apps in a single traversal — and one shock can be traced, graded and mitigated across all six.
 
 - **Live app:** React + Express, `npm run dev` (server 3011, client 5186)
 - **Public build (no Snowflake needed):** {F['site']}
@@ -138,7 +164,6 @@ suppliers conform each app's local records, so one question can cross all six ap
 ## Pages
 
 {chr(10).join(f"- **{p}**" for p in F['enterprise_pages'])}
-- The original Supply Chain ontology pages ({F['scm_pages']}) are kept as the *Supply Chain module (baseline)*.
 
 Every enterprise page has **Ask Cortex** ({F['ask_topics']} grounded topics): the server passes the view's facts to
 `AI_COMPLETE`. The public build ships the default analysis baked at build time.
@@ -146,15 +171,13 @@ Every enterprise page has **Ask Cortex** ({F['ask_topics']} grounded topics): th
 ## Build
 
 ```bash
-# Snowflake layer (US is the source of truth)
+# Snowflake layer (US is the source of truth): 01..06
 for f in sql/enterprise/0*.sql; do snow sql -c dfreriksdemo -f "$f"; done
 python3 tools/deploy_region.py dfreriks_eu_demo     # and dfreriks_apac_demo — gated on parity with US
-# App data + public snapshots
-python3 tools/export_enterprise.py
-npm install && npm run dev                          # then, with the server up:
-python3 tools/bake_static.py
-# Docs and presales kit
-python3 tools/enterprise_facts.py && python3 tools/build_enterprise_kit.py && python3 tools/build_enterprise_decks.py
+# Everything else in one command: export, verify the engine, bake the public site,
+# regenerate README, docs and presales kit, then reconcile against Snowflake
+npm install && npm run dev                          # the kit's screenshots need the app on :5186
+python3 tools/refresh_all.py                        # --check to reconcile only
 ```
 
 ## Scenario modelling
@@ -164,6 +187,23 @@ different scales, so the shock travels as a *share* of activity and each app app
 
 {md_table(["Preset", "Headline", "Apps that move"], scenario_rows())}
 
+## Impact, risk and mitigation
+
+Each scenario opens on three more pages. **Impact Map** plays the ripple hop by hop on a world map and a five-column
+topology (suppliers → plants → customers → legal entities → apps). **Risk Outcome** grades every app against its own base,
+shows when each effect lands and names the single points of failure. **Mitigation & Recovery** runs the levers — stock on
+hand, reroutes to plants that make the category within their free hours, payables, POs, collections, plus labelled
+assumptions — and plays the recovery step by step.
+
+{md_table(MIT_HEAD, mitigation_rows())}
+
+## SAP BDC lineage
+
+The **BDC Lineage** page traces every SAP BDC data product through the 360 app that curates it into the enterprise
+objects that read it, from Snowflake's own dependency graph (`tools/export_lineage.py`).
+
+{md_table(LIN_HEAD, lineage_rows())}
+
 ## Management use cases
 
 {md_table(["Role", "Question no single 360 app can answer"], [list(u) for u in USE_CASES])}
@@ -172,7 +212,7 @@ different scales, so the shock travels as a *share* of activity and each app app
 
 {chr(10).join(f"- **{a}** {b}" for a, b in caveats())}
 
-More: [`docs/enterprise`](docs/enterprise). The Supply Chain baseline docs remain in [`docs`](docs).
+More: [`docs/enterprise`](docs/enterprise).
 """)
 
     (docs / "01-concepts.md").write_text(f"""# 1. Concepts
@@ -182,7 +222,7 @@ supplier's spend, Working Capital its payables, Supply Chain its lots — but no
 The master ontology adds one shared vocabulary and one identity per real-world party.
 
 **Upper ontology.** {F['abstract_classes']} abstract classes — Entity, Party, OrgUnit, Facility, Transaction, Item, Asset,
-Product — generalise the Supply Chain baseline. Every module class hangs off one of them.
+Product — are the shared vocabulary. Every module class hangs off one of them.
 
 **Golden records.** LegalEntity ({F['golden_companies']}), Customer ({F['golden_customers']}), Supplier
 ({F['golden_suppliers']}) and Department ({F['golden_departments']}) live in the core. Each app's local record is a
@@ -208,10 +248,12 @@ SAP_ENTERPRISE_ONTOLOGY
   CORE       ONT_CLASS / ONT_RELATION_DEF / ONT_MODULE, KG_NODE / KG_EDGE, VW_ONT_* views
   XWALK      GOLDEN_COMPANY / CUSTOMER / SUPPLIER / DEPARTMENT, *_MEMBER, V_CROSSWALK
   ANALYTICS  DT_COMPANY_360, DT_CUSTOMER_360, DT_SUPPLIER_360   ({F['dynamic_tables']} dynamic tables, 1-day lag)
+  SCENARIO   V_GEO, V_FLOW, V_PLANT_CAPACITY, V_PLANT_BUFFER, V_SUBSTITUTION   (from Supply Chain 360 tables)
   SEMANTIC   SAP_ENTERPRISE_360       AGENTS   SAP_ENTERPRISE_ANALYST
         │
-tools/export_enterprise.py → data/enterprise_ontology.json → Express API (3011) → React (5186)
-                                                          └→ tools/bake_static.py → GitHub Pages
+tools/export_enterprise.py → data/enterprise_ontology.json ┐
+tools/export_lineage.py    → data/enterprise_lineage.json  ┴→ Express API (3011) → React (5186)
+                                                            └→ tools/bake_static.py → GitHub Pages
 ```
 
 **Aggregate before join.** Every source is summed to the golden id first, then joined, so a one-to-many crosswalk
@@ -237,9 +279,9 @@ serials → orders → golden customer, reduced to one row per (supplier, order)
 | Facts | `sql/enterprise/03_facts.sql` | dynamic tables; lag must be ≥ the 1-day upstream lag |
 | Graph | `sql/enterprise/04_kg_load.sql` | truncate-and-reload, idempotent |
 | Semantic view + agent | `sql/enterprise/05_semantic_agent.sql` | |
-| Regions | `tools/deploy_region.py <connection>` | copies Supply Chain OPS_EXT + ONTOLOGY from US, runs 01–05, **fails unless totals match US** |
-| App data | `tools/export_enterprise.py` | writes `data/enterprise_ontology.json` |
-| Public snapshots | `tools/bake_static.py` | needs the local server; bakes Ask Cortex answers |
+| Scenario network | `sql/enterprise/06_scenario_network.sql` | geography, capacity, buffers, capability — Supply Chain 360 tables only |
+| Regions | `tools/deploy_region.py <connection>` | copies Supply Chain OPS_EXT + ONTOLOGY from US, runs 01–06, **fails unless totals match US** |
+| Everything else | `tools/refresh_all.py` | exports, engine checks, public snapshots, docs and kit, then reconciles against Snowflake |
 
 **Why the region script copies operations data rather than regenerating it.** The Supply Chain generator reads two
 base tables without `ORDER BY`; another account can return rows in a different order and the seeded draws diverge.
@@ -285,14 +327,48 @@ with receivables and inventory already held, stretch DSO and DIO by x / (1 − x
 
 Each card on the *Management Use Cases* page shows the live answer, the ontology path and a button that opens the page or
 runs the scenario, plus its own Ask Cortex.
+
+## Impact, risk and mitigation
+
+`client/src/lib/entImpact.ts` builds on the scenario result, so every figure reconciles to the Studio.
+
+- **Impact Map** — the same propagation as nodes and hops. Plants, suppliers and customers are placed at their Supply Chain 360
+  addresses; legal entities at their first plant (an assumption). Timing uses each plant's minimum days of inventory.
+- **Risk Outcome** — each app graded against its own base (Low < 1%, Moderate 1–5%, High 5–15%, Critical ≥ 15%), a
+  time-to-impact view, single points of failure (single-source suppliers, sole-maker plants) and a register. Inherent
+  and residual risk side by side.
+- **Mitigation & Recovery** — levers *from data*: run on stock held, reroute a category only to a plant that has shipped it and
+  only within its free work-center hours (a plant fed by the failed supplier is excluded), hold payables, pause POs,
+  collect overdue receivables. Levers that are *assumptions* are labelled: second source, hedge ratio, credit insurance,
+  re-sale of freed capacity, plant-facing share of a headcount cut. Re-sold capacity is new margin, never netted
+  against a write-off.
+
+{md_table(MIT_HEAD, mitigation_rows())}
+
+`tools/verify_ent_mitigation.ts` checks every preset: protected + residual = at risk, exposure equals the Studio's output
+lost, reroutes stay within free hours and capable plants, and mitigation never raises the risk band.
+""")
+    (docs / "06-bdc-lineage.md").write_text(f"""# 6. SAP BDC lineage
+
+The enterprise ontology never reads an SAP BDC data product directly. Each product flows into the 360 app that curates it
+(L0 data product → L1 `SAP_BDC_L1` → L2 gold), and the enterprise layer reads those gold objects. The *BDC Lineage* page,
+and this table, come from `tools/export_lineage.py`, which parses `sql/enterprise/*.sql` and walks Snowflake's
+`ACCOUNT_USAGE.OBJECT_DEPENDENCIES` to each terminal source (traced {LIN['generated_at'][:10]}).
+
+{md_table(LIN_HEAD, lineage_rows())}
+
+{chr(10).join(f"- {v}" for v in LIN['notes'].values())}
 """)
     (docs / "04-limits.md").write_text("# 4. Limits and caveats\n\n" + "\n\n".join(f"**{a}** {b}" for a, b in caveats()) + f"""
+
+**Mitigation is planning grade.** Hours per unit are blended across a plant's work centers; reroutes do not model freight or
+qualification cost. Levers marked *your assumption* are inputs, not findings.
 
 **Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions use
 *Ask the Enterprise* (Cortex Analyst over `{F['semantic_view']}`). The public build has no Snowflake connection: it shows
 the baked default analysis only.
 """)
-    print("wrote README.md and docs/enterprise/01-05")
+    print("wrote README.md and docs/enterprise/01-06")
 
 
 # ------------------------------------------------------------------ docx
@@ -327,7 +403,7 @@ def doc_start_here():
         ["to demo in 10 minutes tomorrow", "03_SE_Quick_Start.docx"],
         ["how it is built, and to install it", "05_Architecture_and_Install.docx"],
         ["regions, links and access", "06_Setup_and_Access.docx"],
-        ["slides", "00_Presales_Overview.pptx (10 slides), SAP_Enterprise_Ontology_Demo.pptx (one per page)"],
+        ["slides", "00_Presales_Overview.pptx, SAP_Enterprise_Ontology_Demo.pptx (one slide per page)"],
         ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4 (3 min)"],
         ["the full deep dive — scenarios and use cases", "SAP_Enterprise_Ontology_Deep_Dive.mp4"],
     ], [3.0, 3.9])
@@ -343,12 +419,13 @@ def doc_management():
             "also the one whose deviating lots sit in a top customer's orders — because each app holds its own copy of "
             "that supplier, under its own key.")
     h2(d, "What we built")
-    for t in [f"One ontology: {F['classes']} classes and {F['relations']} relations, the Supply Chain ontology's upper classes "
-              "generalised to all six apps.",
+    for t in [f"One ontology: {F['classes']} classes and {F['relations']} relations over all six apps.",
               f"Golden records: {F['golden_companies']} legal entities, {F['golden_customers']} customers, "
               f"{F['golden_suppliers']} suppliers, {F['golden_departments']} departments, resolving {n(F['crosswalk_records'])} app records.",
               f"A knowledge graph of {n(F['kg_nodes'])} nodes and {n(F['kg_edges'])} edges with {F['dangling_edges']} dangling edges.",
               "Cross-app 360 facts, a semantic view and a Cortex Agent, deployed identically in US, EU and APAC.",
+              f"Lineage from {LIN['counts']['bdcProducts']} SAP BDC data products through the 360 apps into the ontology.",
+              "Scenario modelling that maps the ripple, grades the risk per app and plans the mitigation.",
               f"An app with {len(F['enterprise_pages'])} enterprise pages and grounded Ask Cortex on each."]:
         bullet(d, t)
     h2(d, "What it shows")
@@ -361,6 +438,11 @@ def doc_management():
           [2.6, 1.2, 1.2, 1.9], align_right=(1, 2, 3))
     h2(d, "Scenario modelling: one shock, six apps")
     table(d, ["Scenario", "Headline", "Apps"], scenario_rows(), [2.1, 3.6, 1.2])
+    h2(d, "Impact, risk and mitigation")
+    body(d, "Every preset traced through the ontology, graded per app and mitigated with levers from Supply Chain 360 data.")
+    table(d, MIT_HEAD, mitigation_rows(), [1.6, 0.8, 1.2, 0.9, 1.1, 1.3])
+    h2(d, "Where the data comes from")
+    table(d, LIN_HEAD, lineage_rows(), [1.5, 2.0, 0.9, 2.5])
     h2(d, "Proof it is right")
     table(d, ["Metric", "Source app", "App total", "Enterprise total"],
           [[r["metric"], r["app"], n(r["source"]), n(r["enterprise"])] for r in F["reconciliation"]],
@@ -373,6 +455,7 @@ def doc_management():
 PERSONAS = [
     ("CFO", "Where is cash and margin leaking across entities?", [
         ("Enterprise Overview", "Legal entities across every app: revenue, margin, CCC, headcount, spend, OTIF in one table."),
+        ("Risk Outcome", "One shock graded per app against its own base; inherent versus residual after the plan."),
         ("Ask Cortex (companies)", "“Rank the companies on cash conversion and OTIF together.”"),
         ("Supplier 360", "Open payables next to spend and risk — where early-pay discounts are lost."),
     ]),
@@ -382,12 +465,15 @@ PERSONAS = [
         ("Ask Cortex (supplier)", "“Should we pay this supplier early, hold, or dual-source?”"),
     ]),
     ("COO / Supply Chain", "Which customers feel our operational problems?", [
+        ("Impact Map", "Top supplier fails: play the ripple — plants by day of stock-out, then customers, entities, apps."),
+        ("Mitigation & Recovery", "Run on stock, reroute where a plant can make it; show what stays exposed and why."),
         ("Customer 360", "Late-delivery cost ranked; open a customer that is also overdue on AR."),
         ("Enterprise Graph", "Plants → customers and suppliers → plants, edges coloured by app."),
         ("Ask Cortex (customer)", "“Is this account healthy across finance, sales and delivery?”"),
     ]),
     ("CIO / Data leader", "How is this governed and how does it scale?", [
         ("Master Ontology Model", "Upper classes, golden classes, one module per app."),
+        ("BDC Lineage", "Every SAP BDC data product traced through the 360 apps into the ontology, with provenance."),
         ("Golden-Record Crosswalk", "Every local record and its match method — nothing hidden."),
         ("Ask the Enterprise", "Cortex Analyst over the enterprise semantic view."),
     ]),
@@ -416,6 +502,7 @@ def doc_quickstart():
         "Enterprise Overview — the eight numbers, then the legal-entity table (point at the US OTIF).",
         "Management Use Cases — pick the question your audience owns; run it.",
         "Enterprise Scenario Studio — top supplier fails for 8 weeks: path, per-app effects, ranked customers.",
+        "Impact Map, then Mitigation & Recovery — play the ripple, then the recovery; land on what cannot be mitigated.",
         "Supplier 360 — open the top-spend supplier: spend, AP, lots and the crosswalk members in one record.",
         "Ask Cortex on that supplier — a recommendation that cites Spend, Working Capital and Supply Chain.",
         "Customer 360 — the customers that are both overdue and late.",
@@ -441,6 +528,10 @@ def doc_quickstart():
          "which is what lets Cortex answer across domains without hand-written joins."],
         ["“Is it real-time?”", "The facts are dynamic tables on a one-day lag, matching the upstream 360 apps."],
         ["“Does it work outside the US?”", "Deployed in US, EU and APAC with a parity check against US."],
+        ["“Is the mitigation real?”", "Reroutes, stock cover and capacity come from Supply Chain 360 data and are checked by a test "
+         "harness; anything you set yourself is labelled as an assumption on screen."],
+        ["“Where does the data come from?”", "Open BDC Lineage: each SAP BDC data product, the 360 object that curates it and "
+         "the enterprise object that reads it, with honest labels for what is demo enrichment."],
     ], [2.2, 4.7])
     h2(d, "Caveats to state")
     caveat_block(d)
@@ -454,6 +545,7 @@ def doc_architecture():
         ["CORE", "ONT_CLASS, ONT_RELATION_DEF, ONT_MODULE; KG_NODE / KG_EDGE; VW_ONT_* and exposure views"],
         ["XWALK", "GOLDEN_COMPANY / CUSTOMER / SUPPLIER / DEPARTMENT, *_MEMBER tables, V_CROSSWALK"],
         ["ANALYTICS", f"DT_COMPANY_360, DT_CUSTOMER_360, DT_SUPPLIER_360 ({F['dynamic_tables']} dynamic tables)"],
+        ["SCENARIO", f"V_GEO, V_FLOW, V_PLANT_CAPACITY, V_PLANT_BUFFER, V_SUBSTITUTION ({F['scenario_views']} views over Supply Chain 360)"],
         ["SEMANTIC / AGENTS", "SAP_ENTERPRISE_360 semantic view; SAP_ENTERPRISE_ANALYST Cortex Agent"],
     ], [1.6, 5.3])
     h2(d, "Modules")
@@ -469,11 +561,11 @@ def doc_architecture():
         bullet(d, t)
     h2(d, "Install")
     table(d, ["Step", "Run"], [
-        ["1. Snowflake layer", "sql/enterprise/01..05 on the US account"],
+        ["1. Snowflake layer", "sql/enterprise/01..06 on the US account"],
         ["2. Regions", "python3 tools/deploy_region.py dfreriks_eu_demo (and dfreriks_apac_demo)"],
-        ["3. App data", "python3 tools/export_enterprise.py"],
-        ["4. App", "npm install && npm run dev — server 3011, client 5186"],
-        ["5. Public build", "python3 tools/bake_static.py, then push; GitHub Actions publishes"],
+        ["3. App", "npm install && npm run dev — server 3011, client 5186"],
+        ["4. Data, public build, kit", "python3 tools/refresh_all.py — exports, checks the engine, bakes, reconciles"],
+        ["5. Publish", "push to main; GitHub Actions publishes the public site"],
     ], [1.8, 5.1])
     return d
 

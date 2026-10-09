@@ -127,7 +127,7 @@ def s01_title(prs):
     set_ph(s, 0, "SAP Enterprise Ontology")
     set_ph(s, 1, "One ontology across all six SAP BDC 360 apps")
     banner(s, 3.2, [("Six SAP BDC 360 apps. One identity per customer, supplier and company.", 16, True, WHITE, 4),
-                    ("Built on the Supply Chain ontology, deployed in US, EU and APAC.", 11, False, WHITE, 0)], h=0.95)
+                    ("Lineage from SAP BDC data products, scenario impact and mitigation — in US, EU and APAC.", 11, False, WHITE, 0)], h=0.95)
     return s
 
 
@@ -147,7 +147,7 @@ def s02_problem(prs):
 
 def s03_model(prs):
     s = content(prs, f"{F['classes']} classes, {F['relations']} relations, seven modules",
-                "Supply Chain upper classes; each app adds what it owns")
+                "Shared upper classes; each app adds what it owns")
     stat(s, LEFT, TOP + 0.1, 2.0, 1.25, str(F["abstract_classes"]), "abstract upper classes", "Party, OrgUnit, Facility, Transaction…")
     stat(s, LEFT, TOP + 1.5, 2.0, 1.25, num(F["kg_nodes"]), "graph nodes", f"{num(F['kg_edges'])} edges, {F['dangling_edges']} dangling")
     picture(s, shot("model"), LEFT + 2.25, TOP + 0.05, FULLW - 2.25, 3.55)
@@ -192,6 +192,53 @@ def s06b_scenarios(prs):
     return s
 
 
+def s06d_impact(prs):
+    x = SC["sup-teledyne"]
+    s = content(prs, "Watch the shock travel", "Impact Map — supplier to apps, played hop by hop")
+    picture(s, shot("impact"), LEFT, TOP + 0.02, 6.6, 3.6)
+    card(s, LEFT + 6.8, TOP + 0.05, FULLW - 6.8, 3.55, x["label"],
+         [(f"{x['hops']} steps through the ontology", 11, True, DK1, 5),
+          (f"First stock-out on day {x['risk']['first_felt']}", 10.5, False, DK1, 4),
+          (f"{money(x['mitigation']['at_risk'])} of output at risk", 10.5, False, DK1, 4),
+          ("Timing from each plant's minimum days of inventory.", 8.5, False, BODY_GREY, 0)], accent=SF_BLUE)
+    return s
+
+
+def s06e_risk(prs):
+    x = SC["sup-teledyne"]
+    s = content(prs, "How bad, for whom, and when", "Risk Outcome — every app graded against its own base")
+    picture(s, shot("risk"), LEFT, TOP + 0.02, 6.6, 3.6)
+    card(s, LEFT + 6.8, TOP + 0.05, FULLW - 6.8, 3.55, "Inherent → residual",
+         [(f"{x['risk']['inherent']} → {x['risk']['residual']}", 14, True, DK1, 6),
+          ("Single points of failure", 9, True, DK2, 3)] +
+         [(n, 10, False, DK1, 2) for n in x["risk"]["spofs"][:4]], accent=VIOLET)
+    return s
+
+
+def s06f_mitigation(prs):
+    s = content(prs, "What the plan protects — and what it cannot", "Mitigation & Recovery — levers from data, assumptions labelled")
+    picture(s, shot("mitigation"), LEFT, TOP + 0.02, 6.1, 3.6)
+    rows = []
+    for sid in ("sup-teledyne", "plant-sanjose", "sup-festo-dual", "fx-eur"):
+        m = SC[sid]["mitigation"]
+        pct = 100 * m["protected"] / m["at_risk"] if m["at_risk"] else 0
+        rows.append((f"{SC[sid]['label']}: {pct:.0f}% of {money(m['at_risk'])} protected", 9.5, False, DK1, 4))
+    card(s, LEFT + 6.3, TOP + 0.05, FULLW - 6.3, 3.55, "Recovery", rows +
+         [("Reroutes only to plants that make the category, within free hours.", 8.5, False, BODY_GREY, 0)], accent=TEAL)
+    return s
+
+
+def s06g_lineage(prs):
+    lin = F["lineage"]
+    s = content(prs, f"{lin['counts']['bdcProducts']} SAP BDC data products, traced end to end",
+                "BDC Lineage — data product to 360 app to ontology")
+    picture(s, shot("lineage"), LEFT, TOP + 0.02, 6.6, 3.6)
+    card(s, LEFT + 6.8, TOP + 0.05, FULLW - 6.8, 3.55, "From Snowflake's own lineage",
+         [(f"{m['code']}: {', '.join(m['bdc_products']) or 'BDC-shaped tables'}", 9, False, DK1, 3) for m in lin["modules"]] +
+         [("Demo enrichment and CRM export labelled as such.", 8.5, False, BODY_GREY, 0)], accent=SF_BLUE)
+    return s
+
+
 def s06c_usecases(prs):
     s = content(prs, "Ten questions no single app can answer", "Management Use Cases — each with a live answer and a scenario")
     picture(s, shot("usecases"), LEFT, TOP + 0.02, FULLW, 3.6)
@@ -225,7 +272,7 @@ def s09_caveats(prs):
     items = [("Demo crosswalk", "The six apps share no keys; golden records are rank-based and labelled. Production uses MDG."),
              ("Currency", "USD at Working Capital planning rates; Sales counts USD orders only."),
              ("Scale", "Sales demo orders dwarf Supply Chain orders — compare within an app."),
-             ("Company mapping", "Supply Chain company codes 1000/2000/3000 mapped to US/EU/Japan by region.")]
+             ("Mitigation", "Reroutes and stock cover are planning grade; second source, hedge, insurance are your assumptions.")]
     w = (FULLW - 0.2) / 2
     for i, (k, v) in enumerate(items):
         card(s, LEFT + (i % 2) * (w + 0.2), TOP + 0.1 + (i // 2) * 1.8, w, 1.6, k, [(v, 11, False, DK1, 0)], accent=VIOLET)
@@ -246,12 +293,16 @@ DEMO = [("overview", "Enterprise Overview", "The three legal entities across all
         ("usecases", "Management Use Cases", "Ten questions that need two or more apps"),
         ("scenario", "Enterprise Scenario Studio", "One shock, six apps — path, effects, rankings"),
         ("scenario_cortex", "Ask Cortex on a scenario", "The same engine result, explained and decided"),
+        ("impact", "Impact Map", "The ripple played hop by hop on a map and a topology"),
+        ("risk", "Risk Outcome", "Each app graded, time to impact, single points of failure"),
+        ("mitigation", "Mitigation & Recovery", "Levers, the recovery played step by step, what stays exposed"),
         ("model", "Master Ontology Model", "Upper classes, golden classes, one module per app"),
         ("customers", "Customer 360", "Golden customers across Finance, Sales, WC and Supply Chain"),
         ("suppliers", "Supplier 360", "Golden suppliers across Spend, WC, Finance and Supply Chain"),
         ("ask_cortex", "Ask Cortex", "A recommendation that cites each app's evidence"),
         ("crosswalk", "Golden-Record Crosswalk", "Every local record and how it was matched"),
         ("graph", "Enterprise Graph", "Edges coloured by the app that asserts them"),
+        ("lineage", "BDC Lineage", "SAP BDC data products traced through the 360 apps"),
         ("ask", "Ask the Enterprise", "Cortex Analyst over the enterprise semantic view")]
 
 
@@ -274,7 +325,8 @@ def build(name, slides_fn):
 
 def overview(prs):
     return [fn(prs) for fn in (s01_title, s02_problem, s03_model, s04_golden, s05_app, s06_cortex,
-                               s06b_scenarios, s06c_usecases, s07_proof, s08_regions, s09_caveats, s10_next)]
+                               s06b_scenarios, s06d_impact, s06e_risk, s06f_mitigation, s06c_usecases, s06g_lineage,
+                               s07_proof, s08_regions, s09_caveats, s10_next)]
 
 
 def demo(prs):

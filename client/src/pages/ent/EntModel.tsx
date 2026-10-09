@@ -14,8 +14,8 @@ export default function EntModel() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="max-w-3xl text-sm text-slate-600">
-          <b>{classes.length} classes</b> and <b>{relations.length} relations</b>. Abstract upper classes come from the Supply Chain
-          baseline; golden classes (LegalEntity, Customer, Supplier, Department) live in the core; every module adds only what it
+          <b>{classes.length} classes</b> and <b>{relations.length} relations</b>. Abstract upper classes are the
+          shared vocabulary; golden classes (LegalEntity, Customer, Supplier, Department) live in the core; every module adds only what it
           alone owns and points at the shared classes, so a relation like <i>buysFrom</i> (Spend) and <i>supplies</i> (Supply Chain)
           land on the same Supplier.
         </p>

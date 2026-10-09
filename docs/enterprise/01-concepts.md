@@ -5,7 +5,7 @@ supplier's spend, Working Capital its payables, Supply Chain its lots — but no
 The master ontology adds one shared vocabulary and one identity per real-world party.
 
 **Upper ontology.** 8 abstract classes — Entity, Party, OrgUnit, Facility, Transaction, Item, Asset,
-Product — generalise the Supply Chain baseline. Every module class hangs off one of them.
+Product — are the shared vocabulary. Every module class hangs off one of them.
 
 **Golden records.** LegalEntity (3), Customer (20), Supplier
 (25) and Department (12) live in the core. Each app's local record is a

@@ -1,4 +1,4 @@
-// Cortex Analyst over the SAP BDC ontology semantic view.
+// Cortex Analyst over the enterprise semantic view.
 //
 // Two steps per question, because Analyst returns SQL rather than data:
 //   1. POST the question to /api/v2/cortex/analyst/message with our semantic view
@@ -14,18 +14,12 @@ import path from "node:path";
 import jwt from "jsonwebtoken";
 import snowflake from "snowflake-sdk";
 
-const SEMANTIC_VIEW =
-  process.env.BDC_SEMANTIC_VIEW ??
-  "SAP_BDC_ONTOLOGY.CORE.SAP_BDC_ONTOLOGY_MODEL";
-
 /** Selectable semantic views. Whitelisted: the client sends a key, never a name. */
 export const SEMANTIC_VIEWS: Record<string, { name: string; label: string }> = {
   enterprise: { name: process.env.ENTERPRISE_SEMANTIC_VIEW ?? "SAP_ENTERPRISE_ONTOLOGY.SEMANTIC.SAP_ENTERPRISE_360",
                 label: "Enterprise 360 (all six apps: companies, golden customers and suppliers)" },
-  catalog: { name: SEMANTIC_VIEW, label: "SAP BDC catalog (data products, CDS entities, processes)" },
-  operations: { name: process.env.SC360_SEMANTIC_VIEW ?? "SAP_SUPPLY_CHAIN.ANALYTICS.SAP_SUPPLY_CHAIN_360",
-                label: "Supply Chain 360 operations (orders, OTIF, tools, components, plants)" },
 };
+const SEMANTIC_VIEW = SEMANTIC_VIEWS.enterprise.name;
 
 function resolveHome(p: string): string {
   return p.startsWith("~/") ? path.join(process.env.HOME ?? "", p.slice(2)) : p;
@@ -163,8 +157,8 @@ export async function runSql(sql: string): Promise<{ columns: string[]; rows: un
   });
 }
 
-export async function ask(history: AskTurn[], viewKey = "catalog"): Promise<AskResult> {
-  const content = await callAnalyst(history, (SEMANTIC_VIEWS[viewKey] ?? SEMANTIC_VIEWS.catalog).name);
+export async function ask(history: AskTurn[], viewKey = "enterprise"): Promise<AskResult> {
+  const content = await callAnalyst(history, (SEMANTIC_VIEWS[viewKey] ?? SEMANTIC_VIEWS.enterprise).name);
 
   const answer = content
     .filter((c) => c.type === "text" && c.text)

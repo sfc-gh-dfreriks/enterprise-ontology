@@ -1,0 +1,1642 @@
+{
+ "app": "SAP Enterprise Ontology",
+ "database": "SAP_ENTERPRISE_ONTOLOGY",
+ "connection": "dfreriksdemo",
+ "generated_at": "2026-10-09T18:57:17+00:00",
+ "sourceSystems": [
+  "S/4HANA Finance",
+  "S/4HANA Procurement",
+  "S/4HANA Sales (SD)",
+  "SAP SuccessFactors"
+ ],
+ "summary": "SAP BDC data products flow into each 360 app's own medallion (L0 data product \u2192 L1 curated \u2192 L2 dynamic tables). The enterprise ontology reads those 360 gold objects \u2014 never the data products directly \u2014 conforms them to golden legal entities, customers and suppliers, and serves the result through the enterprise semantic view and the SAP Enterprise Analyst agent.",
+ "counts": {
+  "modules": 6,
+  "bdcProducts": 6,
+  "appObjects": 27,
+  "enterpriseObjects": 33,
+  "sources": 29
+ },
+ "layers": [
+  {
+   "name": "SAP Source Systems",
+   "tone": "sap",
+   "objects": [
+    "S/4HANA Finance",
+    "S/4HANA Procurement",
+    "S/4HANA Sales (SD)",
+    "SAP SuccessFactors"
+   ]
+  },
+  {
+   "name": "L0 \u2014 SAP BDC Data Products",
+   "tone": "bronze",
+   "objects": [
+    "SAP_BDC_DEMO_CORE_WORKFORCE_DATA",
+    "SAP_BDC_DEMO_COST_CENTER",
+    "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY",
+    "SAP_BDC_DEMO_PURCHASE_ORDER",
+    "SAP_BDC_DEMO_SUPPLIER_INVOICE",
+    "SAP_BDC_SALESORDERS_DATA_PRODUCT"
+   ]
+  },
+  {
+   "name": "L1 \u2014 360 Curated (SAP_BDC_L1)",
+   "tone": "silver",
+   "objects": [
+    "SAP_FINANCE_360.SAP_BDC_L1.COSTCENTER",
+    "SAP_FINANCE_360.SAP_BDC_L1.OPERATIONALACCTGDOCITEM",
+    "SAP_FINANCE_360.SAP_BDC_L1.SUPPLIERINVOICE",
+    "SAP_PEOPLE_360.SAP_BDC_L1.WORKFORCE",
+    "SAP_SALES_360.SAP_BDC_L1.CRM_OPPORTUNITY_OPPORTUNITY",
+    "SAP_SALES_360.SAP_BDC_L1.CUSTOMER_CUSTOMER",
+    "SAP_SALES_360.SAP_BDC_L1.SALESORDERS_SALESORDER",
+    "SAP_SPEND_360.SAP_BDC_L1.PURCHASE_ORDER_ITEM",
+    "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM"
+   ]
+  },
+  {
+   "name": "L2 \u2014 360 App Gold (read by the enterprise layer)",
+   "tone": "gold",
+   "objects": [
+    "SAP_FINANCE_360.ANALYTICS.DT_AP_AGING",
+    "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING",
+    "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+    "SAP_FINANCE_360.ANALYTICS.DT_PNL_SUMMARY",
+    "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360",
+    "SAP_SALES_360.SALES_360_L2.CRM_OPPORTUNITY_OPPORTUNITY",
+    "SAP_SALES_360.SALES_360_L2.CUSTOMER_CUSTOMER",
+    "SAP_SALES_360.SALES_360_L2.SALESORDERS_SALESORDER",
+    "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+    "SAP_SPEND_360.ANALYTICS.DT_SUPPLIER_RISK",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_OPERATING_RATE",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION",
+    "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_MATERIAL_STOCK",
+    "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_FLOWS",
+    "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_NODES",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+    "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+   ]
+  },
+  {
+   "name": "Enterprise \u2014 Golden Records + 360 Facts",
+   "tone": "ent",
+   "objects": [
+    "ANALYTICS.DT_COMPANY_360",
+    "ANALYTICS.DT_CUSTOMER_360",
+    "ANALYTICS.DT_SUPPLIER_360",
+    "XWALK.COMPANY_MEMBER",
+    "XWALK.CUSTOMER_MEMBER",
+    "XWALK.GOLDEN_COMPANY",
+    "XWALK.GOLDEN_CUSTOMER",
+    "XWALK.GOLDEN_DEPARTMENT",
+    "XWALK.GOLDEN_SUPPLIER",
+    "XWALK.SUPPLIER_MEMBER"
+   ]
+  },
+  {
+   "name": "AI + Application",
+   "tone": "ai",
+   "objects": [
+    "SEMANTIC.SAP_ENTERPRISE_360 (Semantic View)",
+    "AGENTS.SAP_ENTERPRISE_ANALYST (Cortex Agent)",
+    "SAP Enterprise Ontology (React)"
+   ]
+  }
+ ],
+ "modules": [
+  {
+   "code": "FIN",
+   "name": "SAP BDC Finance 360",
+   "database": "SAP_FINANCE_360",
+   "products": [
+    {
+     "module": "FIN",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Cost Center",
+     "source": "SAP_BDC_DEMO_COST_CENTER.BDCCONNECT.COSTCENTER",
+     "l0Object": "SAP_BDC_DEMO_COST_CENTER.BDCCONNECT.COSTCENTER",
+     "l1Object": "SAP_FINANCE_360.SAP_BDC_L1.COSTCENTER",
+     "appObject": "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+     "enterpriseObjects": [
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_COST_CENTER.BDCCONNECT.COSTCENTER",
+      "SAP_FINANCE_360.SAP_BDC_L1.COSTCENTER",
+      "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER"
+     ],
+     "declared": false,
+     "rows": 45,
+     "appRows": 2459
+    },
+    {
+     "module": "FIN",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Entry View Journal Entry",
+     "source": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l0Object": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l1Object": "SAP_FINANCE_360.SAP_BDC_L1.OPERATIONALACCTGDOCITEM",
+     "appObject": "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+     "enterpriseObjects": [
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+      "SAP_FINANCE_360.SAP_BDC_L1.OPERATIONALACCTGDOCITEM",
+      "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER"
+     ],
+     "declared": false,
+     "rows": 10300,
+     "appRows": 2459
+    },
+    {
+     "module": "FIN",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Entry View Journal Entry",
+     "source": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l0Object": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l1Object": "SAP_FINANCE_360.SAP_BDC_L1.OPERATIONALACCTGDOCITEM",
+     "appObject": "SAP_FINANCE_360.ANALYTICS.DT_PNL_SUMMARY",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+      "SAP_FINANCE_360.SAP_BDC_L1.OPERATIONALACCTGDOCITEM",
+      "SAP_FINANCE_360.ANALYTICS.DT_PNL_SUMMARY"
+     ],
+     "declared": false,
+     "rows": 10300,
+     "appRows": 81
+    },
+    {
+     "module": "FIN",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Supplier Invoice",
+     "source": "SAP_BDC_DEMO_SUPPLIER_INVOICE.BDCCONNECT.SUPPLIERINVOICE",
+     "l0Object": "SAP_BDC_DEMO_SUPPLIER_INVOICE.BDCCONNECT.SUPPLIERINVOICE",
+     "l1Object": "SAP_FINANCE_360.SAP_BDC_L1.SUPPLIERINVOICE",
+     "appObject": "SAP_FINANCE_360.ANALYTICS.DT_AP_AGING",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "XWALK.SUPPLIER_MEMBER"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_SUPPLIER_INVOICE.BDCCONNECT.SUPPLIERINVOICE",
+      "SAP_FINANCE_360.SAP_BDC_L1.SUPPLIERINVOICE",
+      "SAP_FINANCE_360.ANALYTICS.DT_AP_AGING"
+     ],
+     "declared": false,
+     "rows": 500,
+     "appRows": 419
+    },
+    {
+     "module": "FIN",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360",
+      "XWALK.CUSTOMER_MEMBER",
+      "XWALK.GOLDEN_CUSTOMER"
+     ],
+     "path": [
+      "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING"
+     ],
+     "declared": false,
+     "rows": 3868,
+     "appRows": 3868
+    }
+   ],
+   "bdcProducts": [
+    "Cost Center",
+    "Entry View Journal Entry",
+    "Supplier Invoice"
+   ]
+  },
+  {
+   "code": "SAL",
+   "name": "SAP BDC Sales 360",
+   "database": "SAP_SALES_360",
+   "products": [
+    {
+     "module": "SAL",
+     "provenance": "bdc-landed",
+     "provenanceLabel": "SAP BDC data product, landed as an L1 table",
+     "sapSystem": "S/4HANA Sales (SD)",
+     "dataProduct": "Sales Orders \u2014 Sales Order",
+     "source": "SAP_SALES_360.SAP_BDC_L1.SALESORDERS_SALESORDER",
+     "l0Object": "SAP_BDC_SALESORDERS_DATA_PRODUCT.SALESORDERS.SALESORDER",
+     "l1Object": "SAP_SALES_360.SAP_BDC_L1.SALESORDERS_SALESORDER",
+     "appObject": "SAP_SALES_360.SALES_360_L2.SALESORDERS_SALESORDER",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360",
+      "XWALK.CUSTOMER_MEMBER"
+     ],
+     "path": [
+      "SAP_SALES_360.SAP_BDC_L1.SALESORDERS_SALESORDER",
+      "SAP_SALES_360.SALES_360_L2.SALESORDERS_SALESORDER"
+     ],
+     "declared": true,
+     "rows": 558011,
+     "appRows": 558011
+    },
+    {
+     "module": "SAL",
+     "provenance": "crm-export",
+     "provenanceLabel": "SAP CRM / Sales Cloud export (no BDC share in this account)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SALES_360.SAP_BDC_L1.CRM_OPPORTUNITY_OPPORTUNITY",
+     "l0Object": null,
+     "l1Object": "SAP_SALES_360.SAP_BDC_L1.CRM_OPPORTUNITY_OPPORTUNITY",
+     "appObject": "SAP_SALES_360.SALES_360_L2.CRM_OPPORTUNITY_OPPORTUNITY",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360"
+     ],
+     "path": [
+      "SAP_SALES_360.SAP_BDC_L1.CRM_OPPORTUNITY_OPPORTUNITY",
+      "SAP_SALES_360.SALES_360_L2.CRM_OPPORTUNITY_OPPORTUNITY"
+     ],
+     "declared": false,
+     "rows": 3774,
+     "appRows": 3774
+    },
+    {
+     "module": "SAL",
+     "provenance": "crm-export",
+     "provenanceLabel": "SAP CRM / Sales Cloud export (no BDC share in this account)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SALES_360.SAP_BDC_L1.CUSTOMER_CUSTOMER",
+     "l0Object": null,
+     "l1Object": "SAP_SALES_360.SAP_BDC_L1.CUSTOMER_CUSTOMER",
+     "appObject": "SAP_SALES_360.SALES_360_L2.CUSTOMER_CUSTOMER",
+     "enterpriseObjects": [
+      "XWALK.CUSTOMER_MEMBER"
+     ],
+     "path": [
+      "SAP_SALES_360.SAP_BDC_L1.CUSTOMER_CUSTOMER",
+      "SAP_SALES_360.SALES_360_L2.CUSTOMER_CUSTOMER"
+     ],
+     "declared": false,
+     "rows": 3189,
+     "appRows": 3189
+    }
+   ],
+   "bdcProducts": [
+    "Sales Orders \u2014 Sales Order"
+   ]
+  },
+  {
+   "code": "PPL",
+   "name": "SAP BDC People 360",
+   "database": "SAP_PEOPLE_360",
+   "products": [
+    {
+     "module": "PPL",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "SAP SuccessFactors",
+     "dataProduct": "Core Workforce Data",
+     "source": "SAP_BDC_DEMO_CORE_WORKFORCE_DATA.BDCCONNECT.COREWORKFORCE_STANDARDFIELDS",
+     "l0Object": "SAP_BDC_DEMO_CORE_WORKFORCE_DATA.BDCCONNECT.COREWORKFORCE_STANDARDFIELDS",
+     "l1Object": "SAP_PEOPLE_360.SAP_BDC_L1.WORKFORCE",
+     "appObject": "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360",
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_CORE_WORKFORCE_DATA.BDCCONNECT.COREWORKFORCE_STANDARDFIELDS",
+      "SAP_PEOPLE_360.SAP_BDC_L1.WORKFORCE",
+      "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360"
+     ],
+     "declared": false,
+     "rows": 1500,
+     "appRows": 1500
+    }
+   ],
+   "bdcProducts": [
+    "Core Workforce Data"
+   ]
+  },
+  {
+   "code": "SPD",
+   "name": "SAP BDC Spend 360",
+   "database": "SAP_SPEND_360",
+   "products": [
+    {
+     "module": "SPD",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Procurement",
+     "dataProduct": "Purchase Order",
+     "source": "SAP_BDC_DEMO_PURCHASE_ORDER.BDCCONNECT.PURCHASEORDERITEM",
+     "l0Object": "SAP_BDC_DEMO_PURCHASE_ORDER.BDCCONNECT.PURCHASEORDERITEM",
+     "l1Object": "SAP_SPEND_360.SAP_BDC_L1.PURCHASE_ORDER_ITEM",
+     "appObject": "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360",
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_PURCHASE_ORDER.BDCCONNECT.PURCHASEORDERITEM",
+      "SAP_SPEND_360.SAP_BDC_L1.PURCHASE_ORDER_ITEM",
+      "SAP_SPEND_360.ANALYTICS.DT_SPEND_360"
+     ],
+     "declared": false,
+     "rows": 3000,
+     "appRows": 3000
+    },
+    {
+     "module": "SPD",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SPEND_360.ANALYTICS.DT_SUPPLIER_RISK",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SPEND_360.ANALYTICS.DT_SUPPLIER_RISK",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "XWALK.SUPPLIER_MEMBER"
+     ],
+     "path": [
+      "SAP_SPEND_360.ANALYTICS.DT_SUPPLIER_RISK"
+     ],
+     "declared": false,
+     "rows": 245,
+     "appRows": 245
+    }
+   ],
+   "bdcProducts": [
+    "Purchase Order"
+   ]
+  },
+  {
+   "code": "WCP",
+   "name": "SAP BDC Working Capital 360",
+   "database": "SAP_WORKING_CAPITAL_360",
+   "products": [
+    {
+     "module": "WCP",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Entry View Journal Entry",
+     "source": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l0Object": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l1Object": "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM",
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+      "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS"
+     ],
+     "declared": false,
+     "rows": 10300,
+     "appRows": 3566
+    },
+    {
+     "module": "WCP",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Entry View Journal Entry",
+     "source": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l0Object": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l1Object": "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM",
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360",
+      "CORE.KG_EDGE"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+      "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS"
+     ],
+     "declared": false,
+     "rows": 10300,
+     "appRows": 1584
+    },
+    {
+     "module": "WCP",
+     "provenance": "bdc",
+     "provenanceLabel": "SAP BDC data product",
+     "sapSystem": "S/4HANA Finance",
+     "dataProduct": "Entry View Journal Entry",
+     "source": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l0Object": "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+     "l1Object": "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM",
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_BDC_DEMO_ENTRY_VIEW_JOURNAL_ENTRY.BDCCONNECT.OPERATIONALACCTGDOCITEM",
+      "SAP_WORKING_CAPITAL_360.SAP_BDC_L1.OPERATIONAL_ACCTG_DOC_ITEM",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_MONTHLY_FLOWS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+     ],
+     "declared": false,
+     "rows": 10300,
+     "appRows": 75
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+     "enterpriseObjects": [
+      "ANALYTICS.FX",
+      "XWALK.GOLDEN_COMPANY"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY"
+     ],
+     "declared": false,
+     "rows": 3,
+     "appRows": 3
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS"
+     ],
+     "declared": false,
+     "rows": 3,
+     "appRows": 3566
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360",
+      "CORE.KG_EDGE"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS"
+     ],
+     "declared": false,
+     "rows": 3,
+     "appRows": 1584
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_MONTHLY_FLOWS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+     ],
+     "declared": false,
+     "rows": 3,
+     "appRows": 75
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+     "enterpriseObjects": [
+      "XWALK.CUSTOMER_MEMBER"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER"
+     ],
+     "declared": false,
+     "rows": 40,
+     "appRows": 40
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360",
+      "CORE.KG_EDGE"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS"
+     ],
+     "declared": false,
+     "rows": 40,
+     "appRows": 1584
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_MONTHLY_FLOWS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+     ],
+     "declared": false,
+     "rows": 40,
+     "appRows": 75
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_INVENTORY_CATEGORY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_INVENTORY_CATEGORY",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_INVENTORY_MONTHLY",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+     ],
+     "declared": false,
+     "rows": 6,
+     "appRows": 75
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+     "enterpriseObjects": [
+      "XWALK.GOLDEN_SUPPLIER",
+      "XWALK.SUPPLIER_MEMBER"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER"
+     ],
+     "declared": false,
+     "rows": 50,
+     "appRows": 50
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS"
+     ],
+     "declared": false,
+     "rows": 50,
+     "appRows": 3566
+    },
+    {
+     "module": "WCP",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment generated in the app build (not in the standard products)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_MONTHLY_FLOWS",
+      "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+     ],
+     "declared": false,
+     "rows": 50,
+     "appRows": 75
+    }
+   ],
+   "bdcProducts": [
+    "Entry View Journal Entry"
+   ]
+  },
+  {
+   "code": "SCM",
+   "name": "SAP BDC Supply Chain 360",
+   "database": "SAP_SUPPLY_CHAIN",
+   "products": [
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_MATERIAL_STOCK",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_MATERIAL_STOCK",
+     "enterpriseObjects": [
+      "SCENARIO.V_PLANT_BUFFER"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_MATERIAL_STOCK"
+     ],
+     "declared": false,
+     "rows": 23,
+     "appRows": 23
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_FLOWS",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_FLOWS",
+     "enterpriseObjects": [
+      "SCENARIO.V_FLOW"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_FLOWS"
+     ],
+     "declared": false,
+     "rows": 27,
+     "appRows": 27
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_NODES",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_NODES",
+     "enterpriseObjects": [
+      "SCENARIO.V_GEO"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_NODES"
+     ],
+     "declared": false,
+     "rows": 19,
+     "appRows": 19
+    },
+    {
+     "module": "SCM",
+     "provenance": "kg",
+     "provenanceLabel": "Supply Chain 360 knowledge graph (SCM customer and supplier identities)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_CUSTOMER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE",
+      "XWALK.CUSTOMER_MEMBER",
+      "XWALK.GOLDEN_CUSTOMER",
+      "XWALK.GOLDEN_SUPPLIER",
+      "XWALK.SUPPLIER_MEMBER"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE"
+     ],
+     "declared": false,
+     "rows": 3642,
+     "appRows": 3642
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_COMPONENT_COVER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_COMPONENT_COVER",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER"
+     ],
+     "declared": false,
+     "rows": 48,
+     "appRows": 48
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_COMPONENT_LOT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_COMPONENT_LOT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER"
+     ],
+     "declared": false,
+     "rows": 114,
+     "appRows": 48
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_COMPONENT_LOT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_COMPONENT_LOT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY"
+     ],
+     "declared": false,
+     "rows": 114,
+     "appRows": 1129
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_EQUIPMENT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+     "enterpriseObjects": [
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_EQUIPMENT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH"
+     ],
+     "declared": false,
+     "rows": 20,
+     "appRows": 5460
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_EQUIPMENT_HEALTH_DAILY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+     "enterpriseObjects": [
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_EQUIPMENT_HEALTH_DAILY",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH"
+     ],
+     "declared": false,
+     "rows": 5460,
+     "appRows": 5460
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_FINAL_TEST",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_FINAL_TEST",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY"
+     ],
+     "declared": false,
+     "rows": 419,
+     "appRows": 1129
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_OPERATING_RATE",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_OPERATING_RATE",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_OPERATING_RATE",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_OPERATING_RATE"
+     ],
+     "declared": false,
+     "rows": 45,
+     "appRows": 45
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_SALES_ORDER_ITEM",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360",
+      "ANALYTICS.DT_CUSTOMER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_SALES_ORDER_ITEM",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT"
+     ],
+     "declared": false,
+     "rows": 420,
+     "appRows": 420
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_SALES_ORDER_ITEM",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_SALES_ORDER_ITEM",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY"
+     ],
+     "declared": false,
+     "rows": 420,
+     "appRows": 1129
+    },
+    {
+     "module": "SCM",
+     "provenance": "demo",
+     "provenanceLabel": "Demo enrichment keyed to SAP master data (no BDC standard product)",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.OPS_EXT.A_SERIAL_GENEALOGY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.OPS_EXT.A_SERIAL_GENEALOGY",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY"
+     ],
+     "declared": false,
+     "rows": 1129,
+     "appRows": 1129
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_SUPPLIER_360"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER"
+     ],
+     "declared": false,
+     "rows": 5,
+     "appRows": 48
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+     "enterpriseObjects": [
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH"
+     ],
+     "declared": false,
+     "rows": 5,
+     "appRows": 5460
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360",
+      "ANALYTICS.DT_CUSTOMER_360",
+      "CORE.KG_EDGE",
+      "CORE.VW_SUPPLIER_QUALITY_EXPOSURE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT"
+     ],
+     "declared": false,
+     "rows": 5,
+     "appRows": 420
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION",
+     "enterpriseObjects": [
+      "SCENARIO.V_PLANT_CAPACITY"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION"
+     ],
+     "declared": false,
+     "rows": 5,
+     "appRows": 90
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "enterpriseObjects": [
+      "ANALYTICS.DT_COMPANY_360",
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE",
+      "SCENARIO.V_GEO"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.PLANT.A_PLANT"
+     ],
+     "declared": false,
+     "rows": 5,
+     "appRows": 5
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.WORK_CENTER.A_WORK_CENTER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+     "enterpriseObjects": [
+      "CORE.KG_EDGE",
+      "CORE.KG_NODE"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.WORK_CENTER.A_WORK_CENTER",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH"
+     ],
+     "declared": false,
+     "rows": 15,
+     "appRows": 5460
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.WORK_CENTER.A_WORK_CENTER",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION",
+     "enterpriseObjects": [
+      "SCENARIO.V_PLANT_CAPACITY"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.WORK_CENTER.A_WORK_CENTER",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION"
+     ],
+     "declared": false,
+     "rows": 15,
+     "appRows": 90
+    },
+    {
+     "module": "SCM",
+     "provenance": "bdc-shaped",
+     "provenanceLabel": "BDC-shaped native table following the SAP standard data product",
+     "sapSystem": null,
+     "dataProduct": null,
+     "source": "SAP_SUPPLY_CHAIN.WORK_CENTER.A_WORK_CENTER_CAPACITY",
+     "l0Object": null,
+     "l1Object": null,
+     "appObject": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION",
+     "enterpriseObjects": [
+      "SCENARIO.V_PLANT_CAPACITY"
+     ],
+     "path": [
+      "SAP_SUPPLY_CHAIN.WORK_CENTER.A_WORK_CENTER_CAPACITY",
+      "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION"
+     ],
+     "declared": false,
+     "rows": 90,
+     "appRows": 90
+    }
+   ],
+   "bdcProducts": []
+  }
+ ],
+ "enterprise": [
+  {
+   "object": "AGENTS.SAP_ENTERPRISE_ANALYST",
+   "kind": "AGENT",
+   "rows": null,
+   "reads360": [],
+   "readsEnterprise": [
+    "SEMANTIC.SAP_ENTERPRISE_360"
+   ]
+  },
+  {
+   "object": "ANALYTICS.DT_COMPANY_360",
+   "kind": "DYNAMIC TABLE",
+   "rows": 3,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_PNL_SUMMARY",
+    "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360",
+    "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_OPERATING_RATE",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+    "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_OPERATING_RATE",
+    "ANALYTICS.DT_ORDER_FULFILLMENT",
+    "ANALYTICS.DT_PNL_SUMMARY",
+    "ANALYTICS.DT_SPEND_360",
+    "ANALYTICS.DT_WC_MONTHLY_KPI",
+    "ANALYTICS.DT_WORKFORCE_360",
+    "ANALYTICS.FX",
+    "XWALK.COMPANY_MEMBER",
+    "XWALK.GOLDEN_COMPANY"
+   ]
+  },
+  {
+   "object": "ANALYTICS.DT_CUSTOMER_360",
+   "kind": "DYNAMIC TABLE",
+   "rows": 20,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING",
+    "SAP_SALES_360.SALES_360_L2.CRM_OPPORTUNITY_OPPORTUNITY",
+    "SAP_SALES_360.SALES_360_L2.SALESORDERS_SALESORDER",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_AR_AGING",
+    "ANALYTICS.DT_AR_ITEMS",
+    "ANALYTICS.DT_ORDER_FULFILLMENT",
+    "ANALYTICS.FX",
+    "XWALK.CUSTOMER_MEMBER",
+    "XWALK.GOLDEN_CUSTOMER"
+   ]
+  },
+  {
+   "object": "ANALYTICS.DT_SUPPLIER_360",
+   "kind": "DYNAMIC TABLE",
+   "rows": 25,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_AP_AGING",
+    "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+    "SAP_SPEND_360.ANALYTICS.DT_SUPPLIER_RISK",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_AP_AGING",
+    "ANALYTICS.DT_AP_ITEMS",
+    "ANALYTICS.DT_COMPONENT_COVER",
+    "ANALYTICS.DT_SERIAL_GENEALOGY",
+    "ANALYTICS.DT_SPEND_360",
+    "ANALYTICS.DT_SUPPLIER_RISK",
+    "ANALYTICS.FX",
+    "XWALK.GOLDEN_SUPPLIER",
+    "XWALK.SUPPLIER_MEMBER"
+   ]
+  },
+  {
+   "object": "ANALYTICS.FX",
+   "kind": "VIEW",
+   "rows": 3,
+   "reads360": [
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DIM_COMPANY"
+   ]
+  },
+  {
+   "object": "CORE.KG_EDGE",
+   "kind": "TABLE",
+   "rows": 3790,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+    "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360",
+    "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+    "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_AP_ITEMS",
+    "ANALYTICS.DT_AR_ITEMS",
+    "ANALYTICS.DT_EQUIPMENT_HEALTH",
+    "ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+    "ANALYTICS.DT_ORDER_FULFILLMENT",
+    "ANALYTICS.DT_SERIAL_GENEALOGY",
+    "ANALYTICS.DT_SPEND_360",
+    "ANALYTICS.DT_WORKFORCE_360",
+    "ANALYTICS.FX",
+    "CORE.ONT_CLASS",
+    "XWALK.COMPANY_MEMBER",
+    "XWALK.CUSTOMER_MEMBER",
+    "XWALK.GOLDEN_COMPANY",
+    "XWALK.GOLDEN_DEPARTMENT",
+    "XWALK.SUPPLIER_MEMBER"
+   ]
+  },
+  {
+   "object": "CORE.KG_NODE",
+   "kind": "TABLE",
+   "rows": 1928,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+    "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360",
+    "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_EQUIPMENT_HEALTH",
+    "SAP_SUPPLY_CHAIN.PLANT.A_PLANT"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_COMPANY_360",
+    "ANALYTICS.DT_CUSTOMER_360",
+    "ANALYTICS.DT_EQUIPMENT_HEALTH",
+    "ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+    "ANALYTICS.DT_SPEND_360",
+    "ANALYTICS.DT_SUPPLIER_360",
+    "ANALYTICS.DT_WORKFORCE_360",
+    "CORE.ONT_CLASS",
+    "XWALK.CUSTOMER_MEMBER",
+    "XWALK.GOLDEN_DEPARTMENT",
+    "XWALK.SUPPLIER_MEMBER"
+   ]
+  },
+  {
+   "object": "CORE.ONT_CLASS",
+   "kind": "TABLE",
+   "rows": 32,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.ONT_CLASS_MAP",
+   "kind": "TABLE",
+   "rows": 0,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.ONT_MODULE",
+   "kind": "TABLE",
+   "rows": 7,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.ONT_ONTOLOGY",
+   "kind": "TABLE",
+   "rows": 0,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.ONT_PROPERTY",
+   "kind": "TABLE",
+   "rows": 0,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.ONT_RELATION_DEF",
+   "kind": "TABLE",
+   "rows": 17,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.ONT_REL_MAP",
+   "kind": "TABLE",
+   "rows": 0,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "CORE.VW_ONT_FACILITY",
+   "kind": "VIEW",
+   "rows": 5,
+   "reads360": [],
+   "readsEnterprise": [
+    "CORE.KG_NODE"
+   ]
+  },
+  {
+   "object": "CORE.VW_ONT_ORGUNIT",
+   "kind": "VIEW",
+   "rows": 60,
+   "reads360": [],
+   "readsEnterprise": [
+    "CORE.KG_NODE"
+   ]
+  },
+  {
+   "object": "CORE.VW_ONT_PARTY",
+   "kind": "VIEW",
+   "rows": 1796,
+   "reads360": [],
+   "readsEnterprise": [
+    "CORE.KG_NODE"
+   ]
+  },
+  {
+   "object": "CORE.VW_SUPPLIER_QUALITY_EXPOSURE",
+   "kind": "VIEW",
+   "rows": 42,
+   "reads360": [
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_CUSTOMER_360",
+    "ANALYTICS.DT_ORDER_FULFILLMENT",
+    "ANALYTICS.DT_SERIAL_GENEALOGY",
+    "ANALYTICS.DT_SUPPLIER_360",
+    "XWALK.CUSTOMER_MEMBER",
+    "XWALK.SUPPLIER_MEMBER"
+   ]
+  },
+  {
+   "object": "CORE.VW_SUPPLIER_TO_CUSTOMER_EXPOSURE",
+   "kind": "VIEW",
+   "rows": 224,
+   "reads360": [],
+   "readsEnterprise": [
+    "CORE.KG_EDGE",
+    "CORE.KG_NODE"
+   ]
+  },
+  {
+   "object": "SCENARIO.V_FLOW",
+   "kind": "VIEW",
+   "rows": 27,
+   "reads360": [
+    "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_FLOWS"
+   ],
+   "readsEnterprise": []
+  },
+  {
+   "object": "SCENARIO.V_GEO",
+   "kind": "VIEW",
+   "rows": 22,
+   "reads360": [
+    "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_SUPPLY_CHAIN_NODES",
+    "SAP_SUPPLY_CHAIN.PLANT.A_PLANT"
+   ],
+   "readsEnterprise": [
+    "XWALK.COMPANY_MEMBER",
+    "XWALK.GOLDEN_COMPANY",
+    "XWALK.GOLDEN_CUSTOMER",
+    "XWALK.GOLDEN_SUPPLIER"
+   ]
+  },
+  {
+   "object": "SCENARIO.V_PLANT_BUFFER",
+   "kind": "VIEW",
+   "rows": 5,
+   "reads360": [
+    "SAP_SUPPLY_CHAIN.MANUFACTURING_CODES.A_MATERIAL_STOCK"
+   ],
+   "readsEnterprise": []
+  },
+  {
+   "object": "SCENARIO.V_PLANT_CAPACITY",
+   "kind": "VIEW",
+   "rows": 5,
+   "reads360": [
+    "SAP_SUPPLY_CHAIN.ANALYTICS.DT_WORK_CENTER_UTILIZATION"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_WORK_CENTER_UTILIZATION"
+   ]
+  },
+  {
+   "object": "SCENARIO.V_SUBSTITUTION",
+   "kind": "VIEW",
+   "rows": 11,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "SEMANTIC.SAP_ENTERPRISE_360",
+   "kind": "SEMANTIC VIEW",
+   "rows": null,
+   "reads360": [],
+   "readsEnterprise": [
+    "ANALYTICS.DT_COMPANY_360",
+    "ANALYTICS.DT_CUSTOMER_360",
+    "ANALYTICS.DT_SUPPLIER_360",
+    "CORE.VW_SUPPLIER_QUALITY_EXPOSURE",
+    "XWALK.V_CROSSWALK"
+   ]
+  },
+  {
+   "object": "XWALK.COMPANY_MEMBER",
+   "kind": "TABLE",
+   "rows": 15,
+   "reads360": [],
+   "readsEnterprise": [
+    "XWALK.GOLDEN_COMPANY"
+   ]
+  },
+  {
+   "object": "XWALK.CUSTOMER_MEMBER",
+   "kind": "TABLE",
+   "rows": 108,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING",
+    "SAP_SALES_360.SALES_360_L2.CUSTOMER_CUSTOMER",
+    "SAP_SALES_360.SALES_360_L2.SALESORDERS_SALESORDER",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_CUSTOMER"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DIM_CUSTOMER",
+    "ANALYTICS.DT_AR_AGING",
+    "XWALK.GOLDEN_CUSTOMER"
+   ]
+  },
+  {
+   "object": "XWALK.GOLDEN_COMPANY",
+   "kind": "TABLE",
+   "rows": 3,
+   "reads360": [
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_COMPANY"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DIM_COMPANY"
+   ]
+  },
+  {
+   "object": "XWALK.GOLDEN_CUSTOMER",
+   "kind": "TABLE",
+   "rows": 20,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_AR_AGING",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DT_AR_AGING"
+   ]
+  },
+  {
+   "object": "XWALK.GOLDEN_DEPARTMENT",
+   "kind": "TABLE",
+   "rows": 12,
+   "reads360": [],
+   "readsEnterprise": []
+  },
+  {
+   "object": "XWALK.GOLDEN_SUPPLIER",
+   "kind": "TABLE",
+   "rows": 25,
+   "reads360": [
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DIM_SUPPLIER"
+   ]
+  },
+  {
+   "object": "XWALK.SUPPLIER_MEMBER",
+   "kind": "TABLE",
+   "rows": 351,
+   "reads360": [
+    "SAP_FINANCE_360.ANALYTICS.DT_AP_AGING",
+    "SAP_SPEND_360.ANALYTICS.DT_SUPPLIER_RISK",
+    "SAP_SUPPLY_CHAIN.ONTOLOGY.KG_NODE",
+    "SAP_WORKING_CAPITAL_360.ANALYTICS.DIM_SUPPLIER"
+   ],
+   "readsEnterprise": [
+    "ANALYTICS.DIM_SUPPLIER",
+    "ANALYTICS.DT_AP_AGING",
+    "ANALYTICS.DT_SUPPLIER_RISK",
+    "XWALK.GOLDEN_SUPPLIER"
+   ]
+  },
+  {
+   "object": "XWALK.V_CROSSWALK",
+   "kind": "VIEW",
+   "rows": 474,
+   "reads360": [],
+   "readsEnterprise": [
+    "XWALK.COMPANY_MEMBER",
+    "XWALK.CUSTOMER_MEMBER",
+    "XWALK.SUPPLIER_MEMBER"
+   ]
+  }
+ ],
+ "notes": {
+  "databases": "The SAP_BDC_* databases hold SAP BDC standard data product content. In this demo account they are standard databases rather than catalog-linked BDC Connect shares; the 360 apps read them through SAP_BDC_L1 passthrough views exactly as they would a share.",
+  "declared": "Rows marked 'declared' are data loads Snowflake keeps no dependency record for (a table landed from a data product); every other hop is read from OBJECT_DEPENDENCIES.",
+  "supply_chain": "Supply Chain 360's L0 objects are BDC-shaped native tables, and its operations objects (OPS_EXT) are demo enrichment. Its knowledge graph supplies the Supply Chain customer and supplier identities that seed the golden-record crosswalk.",
+  "sales": "Sales CRM opportunities and customers come from a CRM / Sales Cloud export, not a BDC share."
+ }
+}
