@@ -104,7 +104,7 @@ def bake_enterprise() -> int:
         total += bake(f"/ent/supplier/{s['supplier_id']}")
     print(f"  baked enterprise endpoints + {len(customers)} customers + {len(suppliers)} suppliers")
 
-    asks = [(t, {}) for t in ("ent-overview", "ent-companies", "ent-customers", "ent-suppliers",
+    asks = [(t, {}) for t in ("general", "ent-graph", "ent-usecases", "ent-overview", "ent-companies", "ent-customers", "ent-suppliers",
                               "ent-model", "ent-crosswalk", "ent-lineage")]
     asks += [("ent-customer", {"id": c["customer_id"]}) for c in customers[:8]]
     asks += [("ent-supplier", {"id": s["supplier_id"]}) for s in suppliers[:8]]
@@ -118,7 +118,7 @@ def bake_enterprise() -> int:
     baked = {}
     for topic, args in asks:
         req = urllib.request.Request(HOST + "/api/ask-cortex", headers={"Content-Type": "application/json"},
-                                     data=json.dumps({"topic": topic, "args": args, "question": ""}).encode())
+                                     data=json.dumps({"topic": topic, "args": args, "question": "", "wait": True}).encode())
         try:
             with urllib.request.urlopen(req, timeout=180) as r:
                 baked[ask_key(topic, args)] = json.load(r)["text"]

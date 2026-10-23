@@ -86,10 +86,17 @@ export async function askCortex(topic: string, args: Record<string, unknown> = {
   if (STATIC) {
     const res = await fetch(`${SNAP}/ask_cortex.json`);
     const baked: Record<string, string> = res.ok ? await res.json() : {};
-    return baked[askKey(topic, args)] ??
+    return (!question && baked[askKey(topic, args)]) ||
       "_Live Cortex analysis needs a Snowflake connection. In this public build only the default analysis for preset views is available._";
   }
-  return (await post<{ text: string }>("/ask-cortex", { topic, args, question })).text;
+  const { id } = await post<{ id: string }>("/ask-cortex", { topic, args, question });
+  for (let i = 0; i < 90; i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const j = await get<{ status: string; answer?: string; error?: string }>(`/ask-cortex/${id}`);
+    if (j.status === "done") return j.answer ?? "";
+    if (j.status === "error") throw new Error(j.error);
+  }
+  throw new Error("Ask Cortex timed out");
 }
 
 // ---------------------------------------------------------------- enterprise master ontology

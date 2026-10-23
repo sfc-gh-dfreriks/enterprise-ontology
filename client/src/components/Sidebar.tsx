@@ -1,10 +1,11 @@
 import { Network, Boxes, MessageSquare, CloudLightning, Layers, Building2, Users, Truck, GitMerge,
-         Database, Globe2, ShieldAlert, Wrench } from "lucide-react";
+         Database, Globe2, ShieldAlert, Wrench, Sparkles } from "lucide-react";
 
 export type PageId = "ent-overview" | "ent-usecases" | "ent-scenario" | "ent-model" | "ent-customers" | "ent-suppliers"
-                   | "ent-crosswalk" | "ent-graph" | "ent-lineage" | "ent-impact" | "ent-risk" | "ent-mitigation" | "ask";
+                   | "ent-crosswalk" | "ent-graph" | "ent-lineage" | "ent-impact" | "ent-risk" | "ent-mitigation" | "ask" | "ask-cortex";
 
 const NAV: { id: PageId; label: string; icon: any; group?: string }[] = [
+  { id: "ask-cortex", label: "Ask Cortex", icon: Sparkles },
   { id: "ent-overview", label: "Enterprise Overview", icon: Building2, group: "Enterprise ontology" },
   { id: "ent-usecases", label: "Management Use Cases", icon: Boxes },
   { id: "ent-scenario", label: "Enterprise Scenario Studio", icon: CloudLightning },

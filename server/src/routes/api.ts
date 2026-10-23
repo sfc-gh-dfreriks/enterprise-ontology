@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { Router } from "express";
 import { ask, askConfigured, SEMANTIC_VIEWS } from "../services/analyst.js";
 import { loadEnterprise, loadLineage, summary as entSummary, customer as entCustomer, supplier as entSupplier,
@@ -75,12 +76,33 @@ apiRouter.get("/api/ask/examples", wrap((_req, res) => res.json([
 // ---------------------------------------------------------------- Ask Cortex
 // Grounded analysis of the page on screen: enterprise.ts picks the facts for the
 // topic and passes them to AI_COMPLETE.
+interface AskJob { status: "running" | "done" | "error"; answer?: string; error?: string; started: number }
+const askJobs = new Map<string, AskJob>();
+
+// POST starts a background job and returns {id}; poll GET /api/ask-cortex/:id.
+// body.wait=true answers synchronously ({text}) — used by tools/bake_static.py.
 apiRouter.post("/api/ask-cortex", wrapAsync(async (req, res) => {
   const topic = String(req.body?.topic ?? "");
   if (!ENTERPRISE_TOPICS.includes(topic)) { res.status(400).json({ error: `unknown topic: ${topic}` }); return; }
-  const args = (req.body?.args && typeof req.body.args === "object") ? req.body.args : {};
+  const raw = (req.body?.args && typeof req.body.args === "object") ? req.body.args : {};
+  // scenario/levers specs are JSON objects from the page; plain string args are capped
+  const args: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(raw)) if (typeof v !== "string" || v.length < (k === "question" ? 400 : 80) || k === "scenario" || k === "levers") args[k] = v;
   const question = String(req.body?.question ?? "").slice(0, 1000);
-  res.json({ text: await askEnterprise(topic, args, question) });
+  if (req.body?.wait) { res.json({ text: await askEnterprise(topic, args, question) }); return; }
+  const id = crypto.randomUUID();
+  askJobs.set(id, { status: "running", started: Date.now() });
+  askEnterprise(topic, args, question)
+    .then((answer) => askJobs.set(id, { status: "done", answer, started: Date.now() }))
+    .catch((e) => askJobs.set(id, { status: "error", error: String(e?.message || e), started: Date.now() }));
+  for (const [k, j] of askJobs) if (Date.now() - j.started > 3_600_000) askJobs.delete(k);
+  res.json({ id });
+}));
+
+apiRouter.get("/api/ask-cortex/:id", wrap((req, res) => {
+  const j = askJobs.get(String(req.params.id));
+  if (!j) return res.status(404).json({ error: "job not found" });
+  res.json(j);
 }));
 
 // ---------------------------------------------------------------- enterprise master ontology

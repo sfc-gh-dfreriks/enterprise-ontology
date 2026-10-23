@@ -130,7 +130,7 @@ def main():
 
     # From the app's own source, so page and topic counts can't be misquoted.
     sidebar = (ROOT / "client/src/components/Sidebar.tsx").read_text()
-    f["enterprise_pages"] = re.findall(r'id: "(?:ent-[a-z]+|ask)", label: "([^"]+)"', sidebar)
+    f["enterprise_pages"] = re.findall(r'id: "(?:ent-[a-z]+|ask|ask-cortex)", label: "([^"]+)"', sidebar)
     # SAP BDC lineage, as the BDC Lineage page shows it (tools/export_lineage.py)
     lin = json.loads((ROOT / "data/enterprise_lineage.json").read_text())
     f["lineage"] = {"counts": lin["counts"], "generated_at": lin["generated_at"], "notes": lin["notes"],

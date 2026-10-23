@@ -73,6 +73,8 @@ export default function EntUseCases({ onNavigate }: { onNavigate: (p: string) =>
         Ten management questions that <b>no single 360 app can answer</b>, because each needs facts from two or more apps joined on
         the same company, customer or supplier. Each card shows the live answer, the ontology path it travels and the page that explores it.
       </p>
+      <AskCortex topic="ent-usecases" label="Ask Cortex about Management Use Cases"
+        suggestions={["Which of these questions matters most to the CFO right now?", "Which customer or supplier shows up in the most cross-app issues?"]} />
       <div className="grid gap-4 lg:grid-cols-2">
         {CASES.map((u) => (
           <Panel key={u.id} title={u.question} right={<ModuleChips list={u.apps} />}>

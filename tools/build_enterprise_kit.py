@@ -165,8 +165,11 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 
 {chr(10).join(f"- **{p}**" for p in F['enterprise_pages'])}
 
-Every enterprise page has **Ask Cortex** ({F['ask_topics']} grounded topics): the server passes the view's facts to
-`AI_COMPLETE`. The public build ships the default analysis baked at build time.
+**Ask Cortex** is the first sidebar item, and every enterprise page has an *Ask Cortex about <page>* button under its
+header with two suggested questions ({F['ask_topics']} grounded topics). The server gathers the view's live facts from the
+app's own tables and asks `AI_COMPLETE` (default `claude-sonnet-4-5`, override with `CORTEX_MODEL`) for a markdown analysis,
+run as a background job the client polls every 2 s (`POST`/`GET /api/ask-cortex`). The public build ships the default
+analysis baked at build time.
 
 ## Build
 

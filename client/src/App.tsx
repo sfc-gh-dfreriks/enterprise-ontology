@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sidebar, type PageId } from "./components/Sidebar";
 import Ask from "./pages/Ask";
+import AskCortexPage from "./pages/AskCortexPage";
 import EntOverview from "./pages/ent/EntOverview";
 import EntModel from "./pages/ent/EntModel";
 import EntParty from "./pages/ent/EntParty";
@@ -27,6 +28,7 @@ const TITLES: Record<PageId, string> = {
   "ent-graph": "Enterprise Knowledge Graph",
   "ent-lineage": "SAP BDC Lineage — from data products, through the 360 apps, into the ontology",
   ask: "Ask the Enterprise",
+  "ask-cortex": "Ask Cortex — grounded analysis across all six apps",
 };
 
 const PAGE_IDS = Object.keys(TITLES) as PageId[];
@@ -69,6 +71,7 @@ export default function App() {
       case "ent-graph": return <EntGraph />;
       case "ent-lineage": return <EntLineage />;
       case "ask": return <Ask />;
+      case "ask-cortex": return <AskCortexPage />;
     }
   };
 

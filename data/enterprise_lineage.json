@@ -2,7 +2,7 @@
  "app": "SAP Enterprise Ontology",
  "database": "SAP_ENTERPRISE_ONTOLOGY",
  "connection": "dfreriksdemo",
- "generated_at": "2026-10-09T18:57:17+00:00",
+ "generated_at": "2026-10-23T18:08:44+00:00",
  "sourceSystems": [
   "S/4HANA Finance",
   "S/4HANA Procurement",

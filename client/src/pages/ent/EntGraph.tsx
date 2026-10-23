@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "../../hooks/useQuery";
 import { entApi } from "../../lib/api";
 import { GraphCanvas } from "../../components/GraphCanvas";
+import { AskCortex } from "../../components/AskCortex";
 import { Panel, ModuleChips, MODULE_COLOR, usd, num } from "../../components/EntBits";
 
 const TYPE_COLOR: Record<string, string> = { LegalEntity: "#0f172a", Customer: "#16a34a", Supplier: "#d97706",
@@ -29,6 +30,8 @@ export default function EntGraph() {
   if (q.error) return <p className="text-sm text-rose-600">{q.error}</p>;
   return (
     <div className="space-y-3">
+      <AskCortex topic="ent-graph" label="Ask Cortex about the Enterprise Graph"
+        suggestions={["Which entities are the biggest hubs and why does that matter?", "Which app contributes the most cross-domain edges?"]} />
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="text-slate-500">Edges from:</span>
         {["CORE", "FIN", "PPL", "SPD", "WCP", "SCM"].map((m) => (
