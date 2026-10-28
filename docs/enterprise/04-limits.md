@@ -13,6 +13,6 @@
 **Mitigation is planning grade.** Hours per unit are blended across a plant's work centers; reroutes do not model freight or
 qualification cost. Levers marked *your assumption* are inputs, not findings.
 
-**Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions use
-*Ask the Enterprise* (Cortex Analyst over `SAP_ENTERPRISE_ONTOLOGY.SEMANTIC.SAP_ENTERPRISE_360`). The public build has no Snowflake connection: it shows
+**Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions,
+query `SAP_ENTERPRISE_ONTOLOGY.SEMANTIC.SAP_ENTERPRISE_360` with Cortex Analyst (or the `AGENTS.SAP_ENTERPRISE_ANALYST` agent) in Snowsight. The public build has no Snowflake connection: it shows
 the baked default analysis only.

@@ -6,7 +6,7 @@
   /tmp/enterprise_shots/<id>.png        one screenshot per kit slide
   /tmp/enterprise_shots/manifest.json   id -> file, for build_enterprise_decks.py
 
-Needs the app running on :5186 (npm run dev). Ask Cortex and Ask the Enterprise
+Needs the app running on :5186 (npm run dev). Ask Cortex
 shots wait for a real answer, so allow a few minutes.
 
     python3 tools/capture_enterprise.py
@@ -59,7 +59,6 @@ PLAN = [
     ("crosswalk", "ent-crosswalk", None, None),
     ("graph", "ent-graph", None, "wait:3500"),
     ("lineage", "ent-lineage", None, None),
-    ("ask", "ask", None, "ask"),
 ]
 
 
@@ -95,11 +94,6 @@ def main():
                         pg.wait_for_timeout(1300)
             elif action and action.startswith("wait:"):
                 pg.wait_for_timeout(int(action.split(":")[1]))
-            elif action == "ask":
-                pg.get_by_role("button", name="Which suppliers have the highest open payables", exact=False).first.click()
-                pg.get_by_text("show SQL").first.wait_for(timeout=180000)
-                pg.evaluate("document.querySelector('main').scrollTo(0, 0)")   # the question and answer, not the row tail
-                pg.wait_for_timeout(800)
             f = SHOTS / f"{sid}.png"
             pg.screenshot(path=str(f))
             manifest.append({"id": sid, "file": str(f), "page": h})

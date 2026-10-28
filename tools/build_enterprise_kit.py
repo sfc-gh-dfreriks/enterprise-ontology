@@ -367,8 +367,8 @@ and this table, come from `tools/export_lineage.py`, which parses `sql/enterpris
 **Mitigation is planning grade.** Hours per unit are blended across a plant's work centers; reroutes do not model freight or
 qualification cost. Levers marked *your assumption* are inputs, not findings.
 
-**Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions use
-*Ask the Enterprise* (Cortex Analyst over `{F['semantic_view']}`). The public build has no Snowflake connection: it shows
+**Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions,
+query `{F['semantic_view']}` with Cortex Analyst (or the `AGENTS.SAP_ENTERPRISE_ANALYST` agent) in Snowsight. The public build has no Snowflake connection: it shows
 the baked default analysis only.
 """)
     print("wrote README.md and docs/enterprise/01-06")
@@ -457,7 +457,7 @@ def doc_management():
 
 PERSONAS = [
     ("CFO", "Where is cash and margin leaking across entities?", [
-        ("Enterprise Overview", "Legal entities across every app: revenue, margin, CCC, headcount, spend, OTIF in one table."),
+        ("Executive Dashboard", "Legal entities across every app: revenue, margin, CCC, headcount, spend, OTIF in one table."),
         ("Risk Outcome", "One shock graded per app against its own base; inherent versus residual after the plan."),
         ("Ask Cortex (companies)", "“Rank the companies on cash conversion and OTIF together.”"),
         ("Supplier 360", "Open payables next to spend and risk — where early-pay discounts are lost."),
@@ -478,10 +478,9 @@ PERSONAS = [
         ("Master Ontology Model", "Upper classes, golden classes, one module per app."),
         ("BDC Lineage", "Every SAP BDC data product traced through the 360 apps into the ontology, with provenance."),
         ("Golden-Record Crosswalk", "Every local record and its match method — nothing hidden."),
-        ("Ask the Enterprise", "Cortex Analyst over the enterprise semantic view."),
     ]),
     ("CHRO", "Is headcount where the revenue and the problems are?", [
-        ("Enterprise Overview", "Headcount and revenue per employee per entity, next to OTIF."),
+        ("Executive Dashboard", "Headcount and revenue per employee per entity, next to OTIF."),
         ("Ask Cortex (overview)", "“Is US Operations' late cost a people or a supplier problem?”"),
     ]),
 ]
@@ -502,7 +501,7 @@ def doc_quickstart():
             "party across apps, and AI that reasons across all of them with the evidence on screen.")
     h2(d, "10-minute path")
     for i, t in enumerate([
-        "Enterprise Overview — the eight numbers, then the legal-entity table (point at the US OTIF).",
+        "Executive Dashboard — the eight numbers, then the legal-entity table (point at the US OTIF).",
         "Management Use Cases — pick the question your audience owns; run it.",
         "Enterprise Scenario Studio — top supplier fails for 8 weeks: path, per-app effects, ranked customers.",
         "Impact Map, then Mitigation & Recovery — play the ripple, then the recovery; land on what cannot be mitigated.",
@@ -510,7 +509,7 @@ def doc_quickstart():
         "Ask Cortex on that supplier — a recommendation that cites Spend, Working Capital and Supply Chain.",
         "Customer 360 — the customers that are both overdue and late.",
         "Golden-Record Crosswalk — show the match methods; say plainly it is a demo crosswalk.",
-        "Ask the Enterprise — run one sample question live.",
+        "Ask Cortex — ask one open cross-app question live.",
     ], 1):
         body(d, f"{i}. {t}")
     h2(d, "Scenario beats (Enterprise Scenario Studio)")

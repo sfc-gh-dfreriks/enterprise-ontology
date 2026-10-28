@@ -32,7 +32,7 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 ## Pages
 
 - **Ask Cortex**
-- **Enterprise Overview**
+- **Executive Dashboard**
 - **Management Use Cases**
 - **Enterprise Scenario Studio**
 - **Impact Map**
@@ -44,7 +44,6 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 - **Golden-Record Crosswalk**
 - **Enterprise Graph**
 - **BDC Lineage**
-- **Ask the Enterprise**
 
 **Ask Cortex** is the first sidebar item, and every enterprise page has an *Ask Cortex about <page>* button under its
 header with two suggested questions (15 grounded topics). The server gathers the view's live facts from the

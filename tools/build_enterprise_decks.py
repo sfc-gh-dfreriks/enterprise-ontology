@@ -165,7 +165,7 @@ def s04_golden(prs):
 
 
 def s05_app(prs):
-    s = content(prs, "Three companies, six apps, one table", "Enterprise Overview — live from the master ontology")
+    s = content(prs, "Three companies, six apps, one table", "Executive Dashboard — live from the master ontology")
     picture(s, shot("overview"), LEFT, TOP + 0.02, FULLW, 3.6)
     return s
 
@@ -289,7 +289,7 @@ def s10_next(prs):
 
 
 # ----------------------------------------------------------------- demo deck
-DEMO = [("overview", "Enterprise Overview", "The three legal entities across all six apps"),
+DEMO = [("overview", "Executive Dashboard", "The three legal entities across all six apps"),
         ("usecases", "Management Use Cases", "Ten questions that need two or more apps"),
         ("scenario", "Enterprise Scenario Studio", "One shock, six apps — path, effects, rankings"),
         ("scenario_cortex", "Ask Cortex on a scenario", "The same engine result, explained and decided"),
@@ -302,8 +302,7 @@ DEMO = [("overview", "Enterprise Overview", "The three legal entities across all
         ("ask_cortex", "Ask Cortex", "A recommendation that cites each app's evidence"),
         ("crosswalk", "Golden-Record Crosswalk", "Every local record and how it was matched"),
         ("graph", "Enterprise Graph", "Edges coloured by the app that asserts them"),
-        ("lineage", "BDC Lineage", "SAP BDC data products traced through the 360 apps"),
-        ("ask", "Ask the Enterprise", "Cortex Analyst over the enterprise semantic view")]
+        ("lineage", "BDC Lineage", "SAP BDC data products traced through the 360 apps")]
 
 
 def build(name, slides_fn):

@@ -71,11 +71,6 @@ def main() -> None:
         old.unlink()
 
     total = bake_enterprise()
-    for p in ["/ask/examples", "/ask/views"]:
-        total += bake(p)
-    # The public build has no Snowflake connection: Ask the Enterprise says so instead of failing.
-    (OUT / "ask_status.json").write_text(json.dumps(
-        {"ok": False, "missing": ["public build has no Snowflake connection"], "semantic_view": ""}))
 
     files = sorted(OUT.glob("*.json"))
     print(f"\n  {len(files)} files, {sum(f.stat().st_size for f in files) / 1048576:.2f} MB total")
