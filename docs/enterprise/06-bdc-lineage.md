@@ -3,7 +3,7 @@
 The enterprise ontology never reads an SAP BDC data product directly. Each product flows into the 360 app that curates it
 (L0 data product → L1 `SAP_BDC_L1` → L2 gold), and the enterprise layer reads those gold objects. The *BDC Lineage* page,
 and this table, come from `tools/export_lineage.py`, which parses `sql/enterprise/*.sql` and walks Snowflake's
-`ACCOUNT_USAGE.OBJECT_DEPENDENCIES` to each terminal source (traced 2026-10-09).
+`ACCOUNT_USAGE.OBJECT_DEPENDENCIES` to each terminal source (traced 2026-10-23).
 
 | 360 app | SAP BDC data products | Objects read | Provenance |
 |---|---|---|---|

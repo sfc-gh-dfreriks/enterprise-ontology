@@ -55,7 +55,7 @@ PLAN = [
     ("model", "ent-model", None, None),
     ("customers", "ent-customers", None, None),
     ("suppliers", "ent-suppliers", None, None),
-    ("ask_cortex", "ent-suppliers", None, "cortex"),
+    ("ask_cortex", "ask-cortex", None, "cortex"),
     ("crosswalk", "ent-crosswalk", None, None),
     ("graph", "ent-graph", None, "wait:3500"),
     ("lineage", "ent-lineage", None, None),
@@ -83,7 +83,8 @@ def main():
                 pg.get_by_role("button", name=preset, exact=False).first.click()
                 pg.wait_for_timeout(1500)
             if action == "cortex":
-                pg.get_by_role("button", name="Ask Cortex", exact=False).first.click()
+                # scope to <main>: the sidebar also has an "Ask Cortex" item
+                pg.locator("main").get_by_role("button", name="Ask Cortex", exact=False).first.click()
                 pg.locator(".cortex-md").first.wait_for(timeout=180000)
                 pg.wait_for_timeout(800)
             elif action and action.startswith("steps:"):
