@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Sidebar, type PageId } from "./components/Sidebar";
-import Ask from "./pages/Ask";
 import AskCortexPage from "./pages/AskCortexPage";
 import EntOverview from "./pages/ent/EntOverview";
 import EntModel from "./pages/ent/EntModel";
@@ -15,7 +14,7 @@ import EntRisk from "./pages/ent/EntRisk";
 import EntMitigation from "./pages/ent/EntMitigation";
 
 const TITLES: Record<PageId, string> = {
-  "ent-overview": "Enterprise Overview — six 360 apps, one ontology",
+  "ent-overview": "Executive Dashboard — six 360 apps, one ontology",
   "ent-usecases": "Management Use Cases — questions only the master ontology can answer",
   "ent-scenario": "Enterprise Scenario Studio — one shock, six apps",
   "ent-impact": "Impact Map — the ripple through the ontology, hop by hop",
@@ -27,7 +26,6 @@ const TITLES: Record<PageId, string> = {
   "ent-crosswalk": "Golden-Record Crosswalk",
   "ent-graph": "Enterprise Knowledge Graph",
   "ent-lineage": "SAP BDC Lineage — from data products, through the 360 apps, into the ontology",
-  ask: "Ask the Enterprise",
   "ask-cortex": "Ask Cortex — grounded analysis across all six apps",
 };
 
@@ -70,7 +68,6 @@ export default function App() {
       case "ent-crosswalk": return <EntCrosswalk />;
       case "ent-graph": return <EntGraph />;
       case "ent-lineage": return <EntLineage />;
-      case "ask": return <Ask />;
       case "ask-cortex": return <AskCortexPage />;
     }
   };

@@ -1,12 +1,12 @@
-import { Network, Boxes, MessageSquare, CloudLightning, Layers, Building2, Users, Truck, GitMerge,
+import { Network, Boxes, CloudLightning, Layers, Building2, Users, Truck, GitMerge,
          Database, Globe2, ShieldAlert, Wrench, Sparkles } from "lucide-react";
 
 export type PageId = "ent-overview" | "ent-usecases" | "ent-scenario" | "ent-model" | "ent-customers" | "ent-suppliers"
-                   | "ent-crosswalk" | "ent-graph" | "ent-lineage" | "ent-impact" | "ent-risk" | "ent-mitigation" | "ask" | "ask-cortex";
+                   | "ent-crosswalk" | "ent-graph" | "ent-lineage" | "ent-impact" | "ent-risk" | "ent-mitigation" | "ask-cortex";
 
 const NAV: { id: PageId; label: string; icon: any; group?: string }[] = [
   { id: "ask-cortex", label: "Ask Cortex", icon: Sparkles },
-  { id: "ent-overview", label: "Enterprise Overview", icon: Building2, group: "Enterprise ontology" },
+  { id: "ent-overview", label: "Executive Dashboard", icon: Building2, group: "Enterprise ontology" },
   { id: "ent-usecases", label: "Management Use Cases", icon: Boxes },
   { id: "ent-scenario", label: "Enterprise Scenario Studio", icon: CloudLightning },
   { id: "ent-impact", label: "Impact Map", icon: Globe2 },
@@ -18,7 +18,6 @@ const NAV: { id: PageId; label: string; icon: any; group?: string }[] = [
   { id: "ent-crosswalk", label: "Golden-Record Crosswalk", icon: GitMerge },
   { id: "ent-graph", label: "Enterprise Graph", icon: Network },
   { id: "ent-lineage", label: "BDC Lineage", icon: Database },
-  { id: "ask", label: "Ask the Enterprise", icon: MessageSquare },
 ];
 
 export function Sidebar({ active, onNavigate }: {
