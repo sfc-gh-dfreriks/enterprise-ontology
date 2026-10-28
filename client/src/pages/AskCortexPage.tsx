@@ -16,7 +16,7 @@ export default function AskCortexPage() {
       <p className="text-sm text-slate-600">
         Ask a question about the enterprise. Cortex answers only from the master ontology's facts — the three legal
         entities, golden customers and suppliers, quality exposure, the crosswalk and BDC lineage — and says when
-        those facts don't cover the question. For governed SQL over the semantic view, use <b>Ask the Enterprise</b>.
+        those facts don't cover the question.
       </p>
       <AskCortex topic="general" label="Ask Cortex about the enterprise" suggestions={SUGGESTIONS} />
     </div>
