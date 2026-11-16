@@ -17,7 +17,7 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 |---|---|
 | 27 governed concepts, 28 relationships | Snowflake Business Ontology: 19 owned by Enterprise, 8 reused from Supply Chain; 52 representations |
 | 1,928 nodes / 3,790 edges | knowledge graph, 0 dangling edges |
-| 474 records → 45 golden | 20 customers and 25 suppliers conformed across apps |
+| 474 records → 48 golden | 20 customers, 25 suppliers and 3 legal entities conformed across apps |
 | 8 customers in 4 apps | Finance, Sales, Working Capital and Supply Chain see the same account |
 | $44.37M | revenue across 3 legal entities (Finance 360, USD) |
 | 64.8% OTIF | US Operations — the weakest entity; $3.62M late cost |
@@ -94,7 +94,7 @@ python3 tools/refresh_all.py                        # --check to reconcile only
 
 ## Scenario modelling
 
-The **Enterprise Scenario Studio** propagates one shock through golden-record edges into all six apps. Apps run at
+**Scenario Studio** propagates one shock along the governed relationships into all six apps. Apps run at
 different scales, so the shock travels as a *share* of activity and each app applies it to its own baseline.
 
 | Preset | Headline | Apps that move |

@@ -110,8 +110,8 @@ def eight_numbers():
          f"Snowflake Business Ontology: {BO['owned']} owned by Enterprise, {BO['reused']} reused from Supply Chain; "
          f"{BO['representations']} representations"),
         (f"{n(F['kg_nodes'])} nodes / {n(F['kg_edges'])} edges", f"knowledge graph, {F['dangling_edges']} dangling edges"),
-        (f"{n(F['crosswalk_records'])} records → {F['golden_customers'] + F['golden_suppliers']} golden",
-         f"{F['golden_customers']} customers and {F['golden_suppliers']} suppliers conformed across apps"),
+        (f"{n(F['crosswalk_records'])} records → {F['golden_customers'] + F['golden_suppliers'] + F['golden_companies']} golden",
+         f"{F['golden_customers']} customers, {F['golden_suppliers']} suppliers and {F['golden_companies']} legal entities conformed across apps"),
         (f"{F['four_app_customers']} customers in 4 apps", "Finance, Sales, Working Capital and Supply Chain see the same account"),
         (money(F["revenue_usd"]), f"revenue across {F['golden_companies']} legal entities (Finance 360, USD)"),
         (f"{pct(us['otif_pct'])} OTIF", f"US Operations — the weakest entity; {money(us['late_cost_usd'])} late cost"),
@@ -221,7 +221,7 @@ python3 tools/refresh_all.py                        # --check to reconcile only
 
 ## Scenario modelling
 
-The **Enterprise Scenario Studio** propagates one shock through golden-record edges into all six apps. Apps run at
+**Scenario Studio** propagates one shock along the governed relationships into all six apps. Apps run at
 different scales, so the shock travels as a *share* of activity and each app applies it to its own baseline.
 
 {md_table(["Preset", "Headline", "Apps that move"], scenario_rows())}
@@ -479,8 +479,8 @@ def doc_start_here():
         ["how it is built, and to install it", "05_Architecture_and_Install.docx"],
         ["regions, links and access", "06_Setup_and_Access.docx"],
         ["slides", "00_Presales_Overview.pptx, SAP_Enterprise_Ontology_Demo.pptx (one slide per page)"],
-        ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4 (3 min)"],
-        ["the full deep dive — scenarios and use cases", "SAP_Enterprise_Ontology_Deep_Dive.mp4"],
+        ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4 (4 min, on Snowflake Business Ontology; "
+                                     "script in tools/video/segments.py)"],
     ], [3.0, 3.9])
     h2(d, "Read before you demo")
     caveat_block(d)

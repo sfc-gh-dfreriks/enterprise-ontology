@@ -25,7 +25,7 @@ function val(v: number | null, unit: string) {
   return num(v, 1);
 }
 
-/** Enterprise Scenario Studio: one shock, propagated through golden-record edges into all six apps. */
+/** Scenario Studio: one shock, propagated along the governed relationships into all six apps. */
 export default function EntScenario({ onNavigate }: { onNavigate: (p: string) => void }) {
   const data = useQuery(() => entApi.scenarioData(), []);
   // The scenario is shared with Impact Map, Risk Outcome and Mitigation. A use case can

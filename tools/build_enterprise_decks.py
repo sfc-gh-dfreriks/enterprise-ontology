@@ -174,7 +174,8 @@ def s03b_snowflake(prs):
 
 
 def s04_golden(prs):
-    s = content(prs, f"{num(F['crosswalk_records'])} app records, {F['golden_customers'] + F['golden_suppliers']} golden parties",
+    # the 474 records include the legal-entity members, so the golden count includes the legal entities too
+    s = content(prs, f"{num(F['crosswalk_records'])} app records, {F['golden_customers'] + F['golden_suppliers'] + F['golden_companies']} golden records",
                 "Every link keeps its match method — nothing is hidden")
     stat(s, LEFT, TOP + 0.1, 2.0, 1.1, str(F["golden_customers"]), "golden customers", f"{F['four_app_customers']} seen by four apps")
     stat(s, LEFT, TOP + 1.35, 2.0, 1.1, str(F["golden_suppliers"]), "golden suppliers", f"{F['four_app_suppliers']} seen by four apps")
