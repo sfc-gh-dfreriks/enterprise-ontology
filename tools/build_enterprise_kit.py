@@ -507,7 +507,7 @@ def doc_start_here():
         ["how it is built, and to install it", "05_Architecture_and_Install.docx"],
         ["regions, links and access", "06_Setup_and_Access.docx"],
         ["slides", "00_Presales_Overview.pptx, SAP_Enterprise_Ontology_Demo.pptx (one slide per page)"],
-        ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4 (4 min 37, on Snowflake Business Ontology, including the agent searching it; "
+        ["the narrated walkthrough", "SAP_Enterprise_Ontology_Walkthrough.mp4 (4 min 38, on Snowflake Business Ontology, including the agent searching it; "
                                      "script in tools/video/segments.py)"],
     ], [3.0, 3.9])
     h2(d, "Read before you demo")
