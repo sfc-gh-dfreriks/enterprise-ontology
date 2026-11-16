@@ -7,7 +7,9 @@ hand means running eight scripts in the right order with a server running in the
 middle — easy to half-do, and a half-done refresh publishes wrong numbers
 silently rather than failing.
 
-  1. export_enterprise.py     Snowflake -> data/enterprise_ontology.json
+  1. export_business_ontology.py, export_enterprise_ontology.py
+                              Snowflake Business Ontology -> data/ent_business_ontology.json,
+                              walked to every input -> data/enterprise_ontology.json
   2. export_lineage.py        Snowflake -> data/enterprise_lineage.json
   3. verify_ent_mitigation.ts engine invariants on every scenario preset
   4. server build + start     on a free port
@@ -104,6 +106,13 @@ def reconcile() -> int:
            "geo_nodes": len(d["scenario"]["geo"]), "flows": len(d["scenario"]["flows"])}
     truth = got if os.environ.get("NO_SNOWFLAKE") else snowflake_truth()
     bad = 0
+    # The export must be what walking the governed domain produces today.
+    if not os.environ.get("NO_SNOWFLAKE"):
+        r = subprocess.run([sys.executable, "tools/export_enterprise_ontology.py", "--check"], cwd=ROOT,
+                           capture_output=True, text=True)
+        ok = r.returncode == 0
+        bad += 0 if ok else 1
+        say(f"{'ok  ' if ok else 'DRIFT'} export_enterprise_ontology.py: {(r.stdout or r.stderr).strip().splitlines()[-1]}", 4)
     say("reconciling exported JSON against Snowflake:")
     for k in got:
         ok = truth[k] == got[k]
@@ -140,7 +149,9 @@ def main() -> int:
         say("in sync" if bad == 0 else f"{bad} discrepancy(ies) — run without --check")
         return 0 if bad == 0 else 1
 
-    say("1/7  exporting the enterprise ontology"); run([sys.executable, "tools/export_enterprise.py"])
+    say("1/7  exporting the governed Enterprise domain and walking it to the data")
+    run([sys.executable, "tools/export_business_ontology.py"])
+    run([sys.executable, "tools/export_enterprise_ontology.py"])
     say("2/7  exporting SAP BDC lineage"); run([sys.executable, "tools/export_lineage.py"])
     say("3/7  verifying the scenario engine"); run(["npx", "tsx", "tools/verify_ent_mitigation.ts"])
     say("4/7  building server"); run(["npm", "run", "build", "-w", "server"])

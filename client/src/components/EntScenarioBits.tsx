@@ -25,7 +25,7 @@ export function ScenarioBar({ active, title, onNavigate }: { active: ActiveScena
 
 /** Jump between the four scenario views of the same shock. */
 export function ScenarioTabs({ page, onNavigate }: { page: string; onNavigate: (p: string) => void }) {
-  const tabs = [["ent-scenario", "Studio"], ["ent-impact", "Impact Map"], ["ent-risk", "Risk Outcome"], ["ent-mitigation", "Mitigation & Recovery"]];
+  const tabs = [["ent-scenario", "Studio"], ["ent-impact", "Impact Map"], ["ent-mitigation", "Mitigation & Recovery"]];
   return (
     <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-xs">
       {tabs.map(([id, l]) => (

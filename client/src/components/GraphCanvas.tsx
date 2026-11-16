@@ -89,6 +89,8 @@ export function GraphCanvas({
         wheelSensitivity={0.2}
         cy={(cy: cytoscape.Core) => {
           cyRef.current = cy;
+          // Dev only: lets the doc screenshot scripts select a node by name.
+          if (import.meta.env.DEV) (window as any).__cy = cy;
           cy.removeAllListeners();
           cy.on("tap", "node", (e) => {
             cy.elements().removeClass("faded highlighted");
@@ -225,15 +227,6 @@ export function GraphCanvas({
               "border-color": "#ffffff",
               color: "#ffffff",
             },
-          },
-          {
-            // Enterprise graph: nodes carry a shape, edges a module colour.
-            selector: "node[shape]",
-            style: { shape: "data(shape)" as any, "border-width": 1, "border-color": "#ffffff" },
-          },
-          {
-            selector: "edge[ecolor]",
-            style: { "line-color": "data(ecolor)", width: 1.2, opacity: 0.35, "curve-style": "haystack" },
           },
           {
             selector: 'edge[kind = "subClassOf"]',

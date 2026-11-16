@@ -13,8 +13,11 @@ const BandChip = ({ b }: { b: Band }) => (
   <span className="rounded px-2 py-0.5 text-[11px] font-bold text-white" style={{ background: BAND_COLOR[b] }}>{b}</span>
 );
 
-/** Risk Outcome — how bad the scenario is for each app, when it lands, and what is left after mitigation. */
-export default function EntRisk({ onNavigate }: { onNavigate: (p: string) => void }) {
+/**
+ * Risk Outcome — how bad the scenario is for each app, when it lands, and what is left after mitigation.
+ * Shown under Mitigation & Recovery (`embedded`), so the scenario tabs and bar are not repeated.
+ */
+export default function EntRisk({ onNavigate, embedded = false }: { onNavigate: (p: string) => void; embedded?: boolean }) {
   const data = useQuery(() => entApi.scenarioData(), []);
   const [active] = useActiveScenario();
   const a = useMemo(() => (data.data ? analyse(data.data, active.spec, active.levers) : null), [data.data, active]);
@@ -32,11 +35,12 @@ export default function EntRisk({ onNavigate }: { onNavigate: (p: string) => voi
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <ScenarioTabs page="ent-risk" onNavigate={onNavigate} />
+        {embedded ? <h2 className="text-base font-bold text-slate-800">Risk outcome: inherent and residual</h2>
+                  : <ScenarioTabs page="ent-mitigation" onNavigate={onNavigate} />}
         <AskCortex key={JSON.stringify(askArgs)} topic="ent-risk" args={askArgs} label="Ask Cortex: how worried should we be?"
           suggestions={["Which risk needs a decision this week?", "What is the single biggest point of failure?", "How much risk is left after the plan?"]} />
       </div>
-      <ScenarioBar active={active} title={a.result.title} onNavigate={onNavigate} />
+      {!embedded && <ScenarioBar active={active} title={a.result.title} onNavigate={onNavigate} />}
 
       <div className="grid gap-3 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div className="rounded-xl border bg-white p-4 shadow-sm" style={{ borderTop: `4px solid ${BAND_COLOR[risk.overall]}` }}>

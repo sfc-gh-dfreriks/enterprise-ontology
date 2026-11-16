@@ -46,7 +46,7 @@ def name(path: str) -> str:
     decoded back to ":" by the web server serving the build, so the browser's
     request would never match the file written here."""
     p, _, q = path.partition("?")
-    stem = p.lstrip("/").replace("/", "_")
+    stem = re.sub(r"%[0-9A-Fa-f]{2}", "-", p.lstrip("/").replace("/", "_"))
     if not q:
         return f"{stem}.json"
     safe = re.sub(r"[^A-Za-z0-9=&._-]", "-", q)
@@ -89,9 +89,13 @@ def bake_enterprise() -> int:
     default Ask Cortex analysis for the aggregate views and the top records.
     Ask Cortex answers are real AI_COMPLETE output captured at bake time."""
     total = 0
-    for p in ["/ent/summary", "/ent/model", "/ent/graph", "/ent/customers", "/ent/suppliers", "/ent/crosswalk",
-              "/ent/scenario-data", "/ent/lineage"]:
+    for p in ["/ent/summary", "/ent/customers", "/ent/suppliers", "/ent/crosswalk",
+              "/ent/scenario-data", "/ent/lineage", "/ent/ontology-source", "/bo/summary", "/bo/graph"]:
         total += bake(p)
+    # Every governed concept the Ontology page can open.
+    concepts = [n["boName"] for n in (e["data"] for e in fetch("/bo/graph")["elements"]) if n.get("kind") == "class"]
+    for c in concepts:
+        total += bake(f"/bo/node/{urllib.parse.quote(c)}")
     customers, suppliers = fetch("/ent/customers"), fetch("/ent/suppliers")
     for c in customers:
         total += bake(f"/ent/customer/{c['customer_id']}")
@@ -99,8 +103,10 @@ def bake_enterprise() -> int:
         total += bake(f"/ent/supplier/{s['supplier_id']}")
     print(f"  baked enterprise endpoints + {len(customers)} customers + {len(suppliers)} suppliers")
 
-    asks = [(t, {}) for t in ("general", "ent-graph", "ent-usecases", "ent-overview", "ent-companies", "ent-customers", "ent-suppliers",
+    asks = [(t, {}) for t in ("general", "ent-usecases", "ent-overview", "ent-companies", "ent-customers", "ent-suppliers",
                               "ent-model", "ent-crosswalk", "ent-lineage")]
+    # The Ontology page's "Explain <concept>" buttons.
+    asks += [("ent-model", {"concept": c}) for c in concepts]
     asks += [("ent-customer", {"id": c["customer_id"]}) for c in customers[:8]]
     asks += [("ent-supplier", {"id": s["supplier_id"]}) for s in suppliers[:8]]
     # Scenario presets and use cases: ids are read from the client source so the bake

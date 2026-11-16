@@ -43,21 +43,24 @@ const out = PRESETS.map((p) => {
 process.stdout.write(JSON.stringify(out));
 """
 
-# (id, hash, preset button to click or None, action)
+# (id, hash, preset button to click or None, action) — one shot per sidebar page, in sidebar
+# order (tools/enterprise_facts.py "pages"), plus a scenario shot with Ask Cortex open.
+# "steps:N" clicks the playback's Next up to N times (stops when it is disabled), so
+# "steps:99" lands on the result step: on Mitigation that is where the red (lane being
+# replaced) and dashed green (reroute) lanes show.
 PLAN = [
+    ("ontology", "ent-ontology", None, "wait:4000"),
     ("overview", "ent-overview", None, None),
+    ("snowflake", "ent-snowflake", None, None),
+    ("ask_cortex", "ask-cortex", None, "cortex"),
     ("usecases", "ent-usecases", None, None),
     ("scenario", "ent-scenario", "Top-spend supplier fails (8 weeks)", None),
     ("scenario_cortex", "ent-scenario", "Top-spend supplier fails (8 weeks)", "cortex"),
     ("impact", "ent-impact", "Top-spend supplier fails (8 weeks)", "steps:3"),
-    ("risk", "ent-risk", "Top-spend supplier fails (8 weeks)", None),
-    ("mitigation", "ent-mitigation", "San Jose HQ down 4 weeks", "steps:3"),
-    ("model", "ent-model", None, None),
+    ("mitigation", "ent-mitigation", "San Jose HQ down 4 weeks", "steps:99"),
     ("customers", "ent-customers", None, None),
     ("suppliers", "ent-suppliers", None, None),
-    ("ask_cortex", "ask-cortex", None, "cortex"),
     ("crosswalk", "ent-crosswalk", None, None),
-    ("graph", "ent-graph", None, "wait:3500"),
     ("lineage", "ent-lineage", None, None),
 ]
 
@@ -90,9 +93,10 @@ def main():
             elif action and action.startswith("steps:"):
                 for _ in range(int(action.split(":")[1])):
                     nb = pg.get_by_role("button", name="Next").first
-                    if nb.is_enabled():
-                        nb.click()
-                        pg.wait_for_timeout(1300)
+                    if not nb.is_enabled():
+                        break
+                    nb.click()
+                    pg.wait_for_timeout(1300)
             elif action and action.startswith("wait:"):
                 pg.wait_for_timeout(int(action.split(":")[1]))
             f = SHOTS / f"{sid}.png"

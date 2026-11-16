@@ -10,6 +10,7 @@ import { EntRippleGraph } from "../../components/EntRippleGraph";
 import { Playback, ScenarioBar, ScenarioTabs } from "../../components/EntScenarioBits";
 import { Caveat, ModuleChips, MODULE_COLOR, Panel, num } from "../../components/EntBits";
 import { hopColor } from "../../lib/entSeverity";
+import { BuiltOn } from "../../components/SourceBadge";
 
 export const kpiVal = (v: number, unit: string) =>
   unit === "usd" ? fmt(v) : unit === "pct" ? `${v.toFixed(1)}%` : unit === "days" ? `${v.toFixed(1)} d` : num(v, 1);
@@ -34,6 +35,7 @@ export default function EntImpact({ onNavigate }: { onNavigate: (p: string) => v
 
   return (
     <div className="space-y-4">
+      <BuiltOn walks="Each hop is a governed relationship: Supplier supplies Plant, Plant ships to Customer, Plant owned by Legal Entity. Positions come from Plant's representation V_GEO." />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <ScenarioTabs page="ent-impact" onNavigate={onNavigate} />
         <AskCortex key={JSON.stringify(askArgs)} topic="ent-impact" args={askArgs} label="Ask Cortex: explain this ripple"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the two Enterprise Ontology decks on the Snowflake template.
 
-  00_Presales_Overview.pptx          ten slides: problem, model, proof, demo, regions
+  00_Presales_Overview.pptx          problem, governed ontology, proof, demo, regions
   SAP_Enterprise_Ontology_Demo.pptx  one slide per app page, from live screenshots
 
 Figures come from /tmp/enterprise_facts.json, screenshots from /tmp/enterprise_shots.
@@ -106,6 +106,7 @@ def caption(slide, x, y, w, text):
 
 # ----------------------------------------------------------------- figures
 F = FACTS
+BO = F["bo"]
 
 
 def money(v):
@@ -140,17 +141,35 @@ def s02_problem(prs):
     w = (FULLW - 0.4) / 3
     for i, (k, v, c) in enumerate(cards):
         card(s, LEFT + i * (w + 0.2), TOP + 0.15, w, 1.55, k, [(top["supplier"], 13, True, DK1, 4), (v, 11, False, DK1, 0)], accent=c)
-    banner(s, TOP + 2.05, [("The master ontology resolves all three to one golden supplier — and Cortex reasons across them.", 13, True, WHITE, 0)])
+    banner(s, TOP + 2.05, [("The governed ontology resolves all three to one golden supplier — and Cortex reasons across them.", 13, True, WHITE, 0)])
     note(s, "Figures from SAP_ENTERPRISE_ONTOLOGY.ANALYTICS.DT_SUPPLIER_360 (US account).")
     return s
 
 
 def s03_model(prs):
-    s = content(prs, f"{F['classes']} classes, {F['relations']} relations, seven modules",
-                "Shared upper classes; each app adds what it owns")
-    stat(s, LEFT, TOP + 0.1, 2.0, 1.25, str(F["abstract_classes"]), "abstract upper classes", "Party, OrgUnit, Facility, Transaction…")
-    stat(s, LEFT, TOP + 1.5, 2.0, 1.25, num(F["kg_nodes"]), "graph nodes", f"{num(F['kg_edges'])} edges, {F['dangling_edges']} dangling")
-    picture(s, shot("model"), LEFT + 2.25, TOP + 0.05, FULLW - 2.25, 3.55)
+    t = BO["relationships_by_type"]
+    s = content(prs, f"{BO['owned']} governed concepts, {BO['reused']} reused, {BO['enterprise_relationships']} relationships",
+                "Snowflake Business Ontology, Supply Chain concepts reused")
+    stat(s, LEFT, TOP + 0.1, 2.0, 1.15, str(BO["owned"]), "concepts in Enterprise",
+         f"+ {BO['reused']} reused from Supply Chain")
+    stat(s, LEFT, TOP + 1.35, 2.0, 1.1, str(BO["enterprise_relationships"]), "relationships",
+         f"{t.get('IS_A', 0)} IS_A + {t.get('CUSTOM', 0)} custom verbs")
+    stat(s, LEFT, TOP + 2.55, 2.0, 1.05, str(BO["representations"]), "representations",
+         f"{num(F['kg_nodes'])} KG nodes hold the instances")
+    picture(s, shot("ontology"), LEFT + 2.25, TOP + 0.05, FULLW - 2.25, 3.55)
+    return s
+
+
+def s03b_snowflake(prs):
+    s = content(prs, "Governed where the data lives", "Snowflake Ontology Details — the same graph in Snowsight")
+    picture(s, shot("snowflake"), LEFT, TOP + 0.02, 6.1, 3.6)
+    card(s, LEFT + 6.3, TOP + 0.05, FULLW - 6.3, 3.55, "How the app uses it",
+         [("Every input is found through a representation.", 10, False, DK1, 4),
+          ("export_enterprise_ontology.py --check is the parity gate.", 10, False, DK1, 4),
+          ("Each KG edge type is checked against its governed relationship.", 10, False, DK1, 4),
+          ("Ask Cortex is grounded in the governed definitions.", 10, False, DK1, 6),
+          (f"Private preview: US account ({BO['account']}) only; EU/APAC serve the snapshot.", 8.5, False, BODY_GREY, 0)],
+         accent=SF_BLUE)
     return s
 
 
@@ -165,13 +184,13 @@ def s04_golden(prs):
 
 
 def s05_app(prs):
-    s = content(prs, "Three companies, six apps, one table", "Executive Dashboard — live from the master ontology")
+    s = content(prs, "Three companies, six apps, one table", "Executive Dashboard — live, built on Snowflake Business Ontology")
     picture(s, shot("overview"), LEFT, TOP + 0.02, FULLW, 3.6)
     return s
 
 
 def s06_cortex(prs):
-    s = content(prs, "Ask Cortex reasons across the apps", "Grounded in Spend, Working Capital and Supply Chain facts")
+    s = content(prs, "Ask Cortex reasons across the apps", "Grounded in governed definitions and each app's facts")
     picture(s, shot("ask_cortex"), LEFT, TOP + 0.02, 6.1, 3.6)
     exp = F["quality_exposure"]
     card(s, LEFT + 6.3, TOP + 0.05, FULLW - 6.3, 3.55, "Quality exposure",
@@ -181,7 +200,7 @@ def s06_cortex(prs):
 
 
 def s06b_scenarios(prs):
-    s = content(prs, "One shock, propagated into six apps", "Enterprise Scenario Studio — seven presets, or build your own")
+    s = content(prs, "One shock, propagated into six apps", "Scenario Studio — seven presets, or build your own")
     picture(s, shot("scenario"), LEFT, TOP + 0.02, 6.1, 3.6)
     rows = []
     for sid in ("sup-teledyne", "sup-festo-dual", "plant-sanjose", "cust-skhynix", "terms"):
@@ -204,27 +223,19 @@ def s06d_impact(prs):
     return s
 
 
-def s06e_risk(prs):
-    x = SC["sup-teledyne"]
-    s = content(prs, "How bad, for whom, and when", "Risk Outcome — every app graded against its own base")
-    picture(s, shot("risk"), LEFT, TOP + 0.02, 6.6, 3.6)
-    card(s, LEFT + 6.8, TOP + 0.05, FULLW - 6.8, 3.55, "Inherent → residual",
-         [(f"{x['risk']['inherent']} → {x['risk']['residual']}", 14, True, DK1, 6),
-          ("Single points of failure", 9, True, DK2, 3)] +
-         [(n, 10, False, DK1, 2) for n in x["risk"]["spofs"][:4]], accent=VIOLET)
-    return s
-
-
 def s06f_mitigation(prs):
-    s = content(prs, "What the plan protects — and what it cannot", "Mitigation & Recovery — levers from data, assumptions labelled")
+    s = content(prs, "What the plan protects — and what it cannot", "Mitigation & Recovery — San Jose HQ down 4 weeks")
     picture(s, shot("mitigation"), LEFT, TOP + 0.02, 6.1, 3.6)
+    x = SC["plant-sanjose"]["risk"]
     rows = []
     for sid in ("sup-teledyne", "plant-sanjose", "sup-festo-dual", "fx-eur"):
         m = SC[sid]["mitigation"]
         pct = 100 * m["protected"] / m["at_risk"] if m["at_risk"] else 0
         rows.append((f"{SC[sid]['label']}: {pct:.0f}% of {money(m['at_risk'])} protected", 9.5, False, DK1, 4))
     card(s, LEFT + 6.3, TOP + 0.05, FULLW - 6.3, 3.55, "Recovery", rows +
-         [("Reroutes only to plants that make the category, within free hours.", 8.5, False, BODY_GREY, 0)], accent=TEAL)
+         [(f"San Jose risk {x['inherent']} → {x['residual']} (risk outcome is below the plan).", 9, True, DK1, 4),
+            ("Red: lane being replaced. Dashed green: reroute — only to plants that make the category, within free hours.",
+             8.5, False, BODY_GREY, 0)], accent=TEAL)
     return s
 
 
@@ -251,7 +262,7 @@ def s07_proof(prs):
     for i, r in enumerate(F["reconciliation"]):
         val = num(r["enterprise"]) if "Headcount" in r["metric"] else money(r["enterprise"])
         stat(s, LEFT + i * (w + 0.2), TOP + 0.2, w, 1.6, val, r["metric"], f"{r['app']}: {num(r['source'])} — match")
-    banner(s, TOP + 2.2, [("Same numbers in the app, the semantic view, the agent and all three regions.", 13, True, WHITE, 0)])
+    banner(s, TOP + 2.2, [("Same numbers in the app, the exported snapshot and all three regions.", 13, True, WHITE, 0)])
     return s
 
 
@@ -272,10 +283,12 @@ def s09_caveats(prs):
     items = [("Demo crosswalk", "The six apps share no keys; golden records are rank-based and labelled. Production uses MDG."),
              ("Currency", "USD at Working Capital planning rates; Sales counts USD orders only."),
              ("Scale", "Sales demo orders dwarf Supply Chain orders — compare within an app."),
-             ("Mitigation", "Reroutes and stock cover are planning grade; second source, hedge, insurance are your assumptions.")]
+             ("Mitigation", "Reroutes and stock cover are planning grade; second source, hedge, insurance are your assumptions."),
+             ("Private preview", "Business Ontology is on the US account only; EU and APAC serve the exported snapshot."),
+             ("Demo enrichment", "Some inputs are demo enrichment or CRM export; BDC Lineage labels each one.")]
     w = (FULLW - 0.2) / 2
     for i, (k, v) in enumerate(items):
-        card(s, LEFT + (i % 2) * (w + 0.2), TOP + 0.1 + (i // 2) * 1.8, w, 1.6, k, [(v, 11, False, DK1, 0)], accent=VIOLET)
+        card(s, LEFT + (i % 2) * (w + 0.2), TOP + 0.05 + (i // 2) * 1.22, w, 1.1, k, [(v, 10, False, DK1, 0)], accent=VIOLET)
     return s
 
 
@@ -289,20 +302,21 @@ def s10_next(prs):
 
 
 # ----------------------------------------------------------------- demo deck
-DEMO = [("overview", "Executive Dashboard", "The three legal entities across all six apps"),
+# One slide per sidebar page, in sidebar order (enterprise_facts.py "pages"), plus Ask Cortex on a scenario.
+DEMO = [("ontology", "Ontology", "The governed Enterprise domain, drawn natively"),
+        ("overview", "Executive Dashboard", "The three legal entities across all six apps"),
+        ("snowflake", "Snowflake Ontology Details", "The same governed graph in Snowsight"),
+        ("ask_cortex", "Ask Cortex", "Grounded in governed definitions and each app's evidence"),
         ("usecases", "Management Use Cases", "Ten questions that need two or more apps"),
-        ("scenario", "Enterprise Scenario Studio", "One shock, six apps — path, effects, rankings"),
+        ("scenario", "Scenario Studio", "One shock, six apps — path, effects, rankings"),
         ("scenario_cortex", "Ask Cortex on a scenario", "The same engine result, explained and decided"),
         ("impact", "Impact Map", "The ripple played hop by hop on a map and a topology"),
-        ("risk", "Risk Outcome", "Each app graded, time to impact, single points of failure"),
-        ("mitigation", "Mitigation & Recovery", "Levers, the recovery played step by step, what stays exposed"),
-        ("model", "Master Ontology Model", "Upper classes, golden classes, one module per app"),
+        ("mitigation", "Mitigation & Recovery", "Red lane replaced, dashed green reroute, risk below"),
         ("customers", "Customer 360", "Golden customers across Finance, Sales, WC and Supply Chain"),
         ("suppliers", "Supplier 360", "Golden suppliers across Spend, WC, Finance and Supply Chain"),
-        ("ask_cortex", "Ask Cortex", "A recommendation that cites each app's evidence"),
         ("crosswalk", "Golden-Record Crosswalk", "Every local record and how it was matched"),
-        ("graph", "Enterprise Graph", "Edges coloured by the app that asserts them"),
         ("lineage", "BDC Lineage", "SAP BDC data products traced through the 360 apps")]
+assert [d[1] for d in DEMO if d[0] != "scenario_cortex"] == F["enterprise_pages"], "demo deck out of sidebar order"
 
 
 def build(name, slides_fn):
@@ -323,8 +337,8 @@ def build(name, slides_fn):
 
 
 def overview(prs):
-    return [fn(prs) for fn in (s01_title, s02_problem, s03_model, s04_golden, s05_app, s06_cortex,
-                               s06b_scenarios, s06d_impact, s06e_risk, s06f_mitigation, s06c_usecases, s06g_lineage,
+    return [fn(prs) for fn in (s01_title, s02_problem, s03_model, s03b_snowflake, s04_golden, s05_app, s06_cortex,
+                               s06b_scenarios, s06d_impact, s06f_mitigation, s06c_usecases, s06g_lineage,
                                s07_proof, s08_regions, s09_caveats, s10_next)]
 
 

@@ -19,7 +19,9 @@ const SNAP = `${import.meta.env.BASE_URL}data`;
  */
 function snapshotName(pathname: string): string {
   const [p, q] = pathname.split("?");
-  const stem = p.replace(/^\//, "").replace(/\//g, "_");
+  // a percent-escape in the path (a concept name with a space) is folded too: the web
+  // server decodes "%20" in the request, so a filename keeping it would never match
+  const stem = p.replace(/^\//, "").replace(/\//g, "_").replace(/%[0-9A-Fa-f]{2}/g, "-");
   if (!q) return `${stem}.json`;
   return `${stem}__${q.replace(/[^A-Za-z0-9=&._-]/g, "-")}.json`;
 }
@@ -52,24 +54,21 @@ async function post<T>(pathname: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export interface AskTurn { role: "user" | "analyst"; text: string; }
-export interface AskResult {
-  answer: string;
-  sql: string | null;
-  columns: string[];
-  rows: unknown[][];
-  suggestions: string[];
-  rowCount: number;
-  truncated: boolean;
+// ---------------------------------------------------------------- Snowflake Business Ontology
+export interface BoEdge { type: string; label: string | null; direction: "out" | "in"; node: string | null }
+export interface BoRepresentation { object: string; fqn: string; objectType: string; role: string; validity: string | null }
+export interface BoNode {
+  termId: string; name: string; fqn: string; kind: string; domain: string; owner: "Enterprise" | "Supply Chain";
+  status: string | null; description: string | null; synonyms: string[]; appClass: string;
+  edges: BoEdge[]; representations: BoRepresentation[];
+  history: { events: number; truncated: boolean; last: number | null; changedBy: string[] };
+  snowsightUrl: string;
 }
-export interface AskStatus { ok: boolean; missing: string[]; semantic_view: string; }
-
-export const api = {
-  askStatus: () => get<AskStatus>("/ask/status"),
-  askExamples: () => get<string[]>("/ask/examples"),
-  ask: (history: AskTurn[], view = "enterprise") => post<AskResult>("/ask", { history, view }),
-  askViews: () => get<{ key: string; name: string; label: string }[]>("/ask/views"),
-};
+export type BoSummary =
+  | { available: false }
+  | { available: true; domain: string; domains: string[]; account: string; exportedAt: string; snowsightUrl: string;
+      counts: { nodes: number; owned: number; reused: number; relationships: number; representations: number };
+      relationshipTypes: Record<string, number>; byDomain: Record<string, number> };
 
 /** Stable key for a baked Ask Cortex answer: topic plus sorted args. */
 export function askKey(topic: string, args: Record<string, unknown> = {}): string {
@@ -102,8 +101,10 @@ export async function askCortex(topic: string, args: Record<string, unknown> = {
 // ---------------------------------------------------------------- enterprise master ontology
 export const entApi = {
   summary: () => get<any>("/ent/summary"),
-  model: () => get<any>("/ent/model"),
-  graph: () => get<any>("/ent/graph"),
+  boSummary: () => get<BoSummary>("/bo/summary"),
+  boGraph: () => get<{ elements: any[]; counts: Record<string, number>; exportedAt: string }>("/bo/graph"),
+  boNode: (name: string) => get<BoNode>(`/bo/node/${encodeURIComponent(name)}`),
+  ontologySource: () => get<any>("/ent/ontology-source"),
   customers: () => get<any[]>("/ent/customers"),
   suppliers: () => get<any[]>("/ent/suppliers"),
   customer: (id: string) => get<any>(`/ent/customer/${encodeURIComponent(id)}`),

@@ -4,6 +4,7 @@ import { useQuery } from "../../hooks/useQuery";
 import { entApi } from "../../lib/api";
 import { AskCortex } from "../../components/AskCortex";
 import { Panel, ModuleChips, MODULE_COLOR, MODULE_NAME, num } from "../../components/EntBits";
+import { BuiltOn } from "../../components/SourceBadge";
 
 /**
  * SAP BDC lineage for the enterprise ontology — the same medallion view the 360
@@ -112,6 +113,7 @@ export default function EntLineage() {
 
   return (
     <div className="space-y-6">
+      <BuiltOn walks="BDC data products feed the 360 apps whose tables are the representations of the governed Enterprise concepts." />
       <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-indigo-50 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="max-w-4xl">

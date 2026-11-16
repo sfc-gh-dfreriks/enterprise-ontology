@@ -6,13 +6,16 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 
 - **Live app:** React + Express, `npm run dev` (server 3011, client 5186)
 - **Public build (no Snowflake needed):** https://sfc-gh-dfreriks.github.io/enterprise-ontology/
-- **Snowflake:** `SAP_ENTERPRISE_ONTOLOGY` — semantic view `SAP_ENTERPRISE_ONTOLOGY.SEMANTIC.SAP_ENTERPRISE_360`, agent `SAP_ENTERPRISE_ONTOLOGY.AGENTS.SAP_ENTERPRISE_ANALYST`
+- **Ontology:** Snowflake Business Ontology on `MSB89522` — governed domain **Enterprise** with subdomains
+  Finance, People, Sales, Spend, Working Capital, reusing 8 concepts of the governed
+  **Supply Chain** domain
+- **Instance data:** `SAP_ENTERPRISE_ONTOLOGY` — crosswalk, knowledge graph (`CORE.KG_NODE` / `KG_EDGE`), 360 facts, scenario network
 
 ## In numbers
 
 | Measure | Value |
 |---|---|
-| 32 classes, 17 relations | one ontology over six 360 apps |
+| 27 governed concepts, 28 relationships | Snowflake Business Ontology: 19 owned by Enterprise, 8 reused from Supply Chain; 52 representations |
 | 1,928 nodes / 3,790 edges | knowledge graph, 0 dangling edges |
 | 474 records → 45 golden | 20 customers and 25 suppliers conformed across apps |
 | 8 customers in 4 apps | Finance, Sales, Working Capital and Supply Chain see the same account |
@@ -29,33 +32,59 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 | Japan Operations | $14.89M | 24.0% | 45.1 / 41.7 / 66.0 | 403 | $1.56M | 85.9% | $362K |
 | EU Operations | $14.52M | 22.9% | 47.7 / 43.6 / 56.6 | 445 | $1.52M | 82.3% | $423K |
 
+## Governed ontology
+
+The model is no longer app-owned tables: it is the **Snowflake Business Ontology**. 19 concepts are governed in
+Enterprise and its subdomains; 8 (Component Lot, Customer, Material Flow, Party, Plant, Sales Order, Supplier, Transaction) are reused from Supply Chain, not
+redefined. 28 Enterprise relationships (15 IS_A, 13 CUSTOM; custom verbs: buys from, employs, funded by, in category, in department, member of, owed by, owned by, payable to, same as, sells to, supplies component),
+36 in the snapshot including Supply Chain's own between reused concepts. 52
+representations link concepts to the Snowflake objects that implement them, including 7 class views
+(`sql/enterprise/07_business_ontology_views.sql`). Material, Product, Sales Org, Transaction have no representation (abstract, or no
+source object).
+
+| Governed domain | Concepts | Names |
+|---|---|---|
+| Enterprise | 7 | Department, Legal Entity, Local Customer, Local Supplier, Material, Org Unit, Product |
+| Enterprise.Finance | 4 | Cost Center, GL Account, Journal Entry, Profit Center |
+| Enterprise.People | 1 | Employee |
+| Enterprise.Sales | 3 | Opportunity, Sales Org, Sellable Product |
+| Enterprise.Spend | 2 | Purchase Order, Spend Category |
+| Enterprise.Working Capital | 2 | AP Invoice, AR Invoice |
+| Supply Chain | 8 | Component Lot, Customer, Material Flow, Party, Plant, Sales Order, Supplier, Transaction |
+
+The exporter finds every input through a representation, so a concept that loses its representation fails the export.
+Instance links stay in the knowledge graph — 1,928 nodes, 3,790 edges — and each edge type is
+checked against the governed relationship it instantiates.
+
 ## Pages
 
-- **Ask Cortex**
+- **Ontology**
 - **Executive Dashboard**
+- **Snowflake Ontology Details**
+- **Ask Cortex**
 - **Management Use Cases**
-- **Enterprise Scenario Studio**
+- **Scenario Studio**
 - **Impact Map**
-- **Risk Outcome**
 - **Mitigation & Recovery**
-- **Master Ontology Model**
 - **Customer 360**
 - **Supplier 360**
 - **Golden-Record Crosswalk**
-- **Enterprise Graph**
 - **BDC Lineage**
 
-**Ask Cortex** is the first sidebar item, and every enterprise page has an *Ask Cortex about <page>* button under its
-header with two suggested questions (17 grounded topics). The server gathers the view's live facts from the
-app's own tables and asks `AI_COMPLETE` (default `claude-sonnet-4-5`, override with `CORTEX_MODEL`) for a markdown analysis,
+The app opens on **Ontology**, the governed graph drawn natively. Every enterprise page has an *Ask Cortex* button under its
+header with two suggested questions (16 grounded topics), and a "built on Snowflake Business Ontology" line.
+The server gathers the view's live facts plus the governed definitions and relationships of the concepts on screen and asks
+`AI_COMPLETE` (default `claude-opus-5-5`, override with `CORTEX_MODEL`) for a markdown analysis,
 run as a background job the client polls every 2 s (`POST`/`GET /api/ask-cortex`). The public build ships the default
 analysis baked at build time.
 
 ## Build
 
 ```bash
-# Snowflake layer (US is the source of truth): 01..06
+# Snowflake layer (US is the source of truth): 01..07 (07 = class views the Business Ontology represents)
 for f in sql/enterprise/0*.sql; do snow sql -c dfreriksdemo -f "$f"; done
+python3 tools/export_business_ontology.py            # governed graph -> data/ent_business_ontology.json
+python3 tools/export_enterprise_ontology.py --check  # parity gate: walk representations, compare with the served export
 python3 tools/deploy_region.py dfreriks_eu_demo     # and dfreriks_apac_demo — gated on parity with US
 # Everything else in one command: export, verify the engine, bake the public site,
 # regenerate README, docs and presales kit, then reconcile against Snowflake
@@ -80,11 +109,12 @@ different scales, so the shock travels as a *share* of activity and each app app
 
 ## Impact, risk and mitigation
 
-Each scenario opens on three more pages. **Impact Map** plays the ripple hop by hop on a world map and a five-column
-topology (suppliers → plants → customers → legal entities → apps). **Risk Outcome** grades every app against its own base,
-shows when each effect lands and names the single points of failure. **Mitigation & Recovery** runs the levers — stock on
-hand, reroutes to plants that make the category within their free hours, payables, POs, collections, plus labelled
-assumptions — and plays the recovery step by step.
+The scenario pages are tabs: **Studio / Impact Map / Mitigation & Recovery**. **Impact Map** plays the ripple hop by hop
+on a world map and a five-column topology (suppliers → plants → customers → legal entities → apps). **Mitigation &
+Recovery** runs the levers — stock on hand, reroutes to plants that make the category within their free hours, payables,
+POs, collections, plus labelled assumptions — and plays the recovery step by step: red marks a lane being replaced,
+dashed green its reroute. The risk outcome (each app graded against its own base, time to impact, single points of
+failure) is embedded below it.
 
 | Preset | At risk | Protected | Still exposed | Risk | First action |
 |---|---|---|---|---|---|
@@ -131,6 +161,13 @@ objects that read it, from Snowflake's own dependency graph (`tools/export_linea
 - **Currency.** Money is USD at the Working Capital planning rates (EUR 1.08, JPY 0.0067, USD 1). Sales order value counts USD orders only.
 - **Scale between apps.** Sales 360 order values come from the BDC demo tenant and are far larger than the Supply Chain demo orders. Compare within an app, not across.
 - **Company mapping.** Supply Chain plants carry company codes 1000/2000/3000; they are mapped to US, EU and Japan Operations by region. On the maps each legal entity sits at its first plant.
+- **Private preview.** Snowflake Business Ontology is enabled on the US account only (MSB89522). The EU and APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is parity-checked against US, the governed graph is not replicated.
+- **Demo enrichment.** Some 360 inputs are demo enrichment or CRM export rather than an SAP BDC data product; BDC Lineage labels each one.
 - **Mitigation.** Reroutes, stock cover and capacity come from Supply Chain 360 data and are planning grade. Second source, hedging, insurance and re-sale are labelled assumptions you set.
 
 More: [`docs/enterprise`](docs/enterprise).
+
+*History:* until November 2026 the model lived in app-owned tables (`CORE.ONT_CLASS` / `ONT_RELATION_DEF` / `ONT_MODULE`,
+seven modules), was browsed on *Master Ontology Model* and *Enterprise Graph* pages, Ask went through Cortex Analyst on
+`SEMANTIC.SAP_ENTERPRISE_360`, and the export was `tools/export_enterprise.py`. Those tables, the semantic view and the
+agent still exist in Snowflake but the app no longer reads them.

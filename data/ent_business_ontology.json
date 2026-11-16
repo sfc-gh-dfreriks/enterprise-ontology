@@ -1,0 +1,1767 @@
+{
+ "domain": "Enterprise",
+ "domains": [
+  "Enterprise",
+  "Enterprise.Finance",
+  "Enterprise.People",
+  "Enterprise.Sales",
+  "Enterprise.Spend",
+  "Enterprise.Working Capital",
+  "Supply Chain"
+ ],
+ "account": "MSB89522",
+ "exportedAt": "2026-11-16T18:57:07+00:00",
+ "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology",
+ "counts": {
+  "nodes": 27,
+  "owned": 19,
+  "reused": 8,
+  "relationships": 36,
+  "representations": 52
+ },
+ "nodes": [
+  {
+   "termId": "122841924749",
+   "name": "AP Invoice",
+   "fqn": "Enterprise.Working Capital.AP Invoice",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Working Capital",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A payable item in Working Capital 360: money a Legal Entity owes a Supplier. A kind of Transaction. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "APInvoice",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "payable to",
+     "direction": "out",
+     "node": "Supplier"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Transaction"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_AP_ITEMS",
+     "fqn": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AP_ITEMS",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 5,
+    "truncated": false,
+    "last": 1794852099285,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851192677,
+   "lastModifiedOn": 1794851192810,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Working%20Capital/entity/AP%20Invoice"
+  },
+  {
+   "termId": "122841925253",
+   "name": "AR Invoice",
+   "fqn": "Enterprise.Working Capital.AR Invoice",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Working Capital",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A receivable item in Working Capital 360: money a Customer owes a Legal Entity. A kind of Transaction. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "ARInvoice",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "owed by",
+     "direction": "out",
+     "node": "Customer"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Transaction"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_AR_ITEMS",
+     "fqn": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_AR_ITEMS",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 5,
+    "truncated": false,
+    "last": 1794852099100,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851192390,
+   "lastModifiedOn": 1794851192559,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Working%20Capital/entity/AR%20Invoice"
+  },
+  {
+   "termId": "479851272",
+   "name": "Component Lot",
+   "fqn": "Supply Chain.Component Lot",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "A received supplier lot of a BOM component, with inspection result. A kind of Item. In the supply chain model: A Component Lot is supplied by a Supplier (N:1). A System Serial contains a Component Lot (N:N). Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [
+    "ComponentLot"
+   ],
+   "appClass": "ComponentLot",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "supplied by",
+     "direction": "out",
+     "node": "Supplier"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_SERIAL_GENEALOGY",
+     "fqn": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_SERIAL_GENEALOGY",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_LOT_BLAST_RADIUS",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_LOT_BLAST_RADIUS",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_COMPONENTLOT",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_COMPONENTLOT",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794852327011,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585659577,
+   "lastModifiedOn": 1794585692870,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Component%20Lot"
+  },
+  {
+   "termId": "122841924933",
+   "name": "Cost Center",
+   "fqn": "Enterprise.Finance.Cost Center",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Finance",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A Finance 360 cost center that collects expense. A kind of Org Unit. In the enterprise model: a Department is funded by Cost Centers. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "CostCenter",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Org Unit"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "funded by",
+     "direction": "in",
+     "node": "Department"
+    }
+   ],
+   "representations": [
+    {
+     "object": "VW_ONT_COSTCENTER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_COSTCENTER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_EXPENSE_BY_COSTCENTER",
+     "fqn": "SAP_FINANCE_360.ANALYTICS.DT_EXPENSE_BY_COSTCENTER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 6,
+    "truncated": false,
+    "last": 1794852096741,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851189158,
+   "lastModifiedOn": 1794851189363,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Finance/entity/Cost%20Center"
+  },
+  {
+   "termId": "122841923845",
+   "name": "Customer",
+   "fqn": "Supply Chain.Customer",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "An organisation that receives finished output. A kind of Party. In the supply chain model: A Plant ships to a Customer (N:N). A Sales Order is placed by a Customer (N:1). Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Customer",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Party"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "sells to",
+     "direction": "in",
+     "node": "Legal Entity"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "owed by",
+     "direction": "in",
+     "node": "AR Invoice"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "same as",
+     "direction": "in",
+     "node": "Local Customer"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "placed by",
+     "direction": "in",
+     "node": "Sales Order"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "ships to",
+     "direction": "in",
+     "node": "Plant"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_CUSTOMER_360",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.ANALYTICS.DT_CUSTOMER_360",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "GOLDEN_CUSTOMER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.GOLDEN_CUSTOMER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_CUSTOMER",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_CUSTOMER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 11,
+    "truncated": false,
+    "last": 1794852099727,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585659760,
+   "lastModifiedOn": 1794585693056,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Customer"
+  },
+  {
+   "termId": "122841924677",
+   "name": "Department",
+   "fqn": "Enterprise.Department",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A conformed department, joining People 360 departments to Finance 360 cost centers. A kind of Org Unit. In the enterprise model: an Employee is in a Department, and a Department is funded by Cost Centers. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Department",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "in department",
+     "direction": "in",
+     "node": "Employee"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "funded by",
+     "direction": "out",
+     "node": "Cost Center"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Org Unit"
+    }
+   ],
+   "representations": [
+    {
+     "object": "GOLDEN_DEPARTMENT",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.GOLDEN_DEPARTMENT",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_DEPARTMENT",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_DEPARTMENT",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 7,
+    "truncated": false,
+    "last": 1794852094683,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851187817,
+   "lastModifiedOn": 1794851188006,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Department"
+  },
+  {
+   "termId": "122841924745",
+   "name": "Employee",
+   "fqn": "Enterprise.People.Employee",
+   "kind": "ENTITY",
+   "domain": "Enterprise.People",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A worker in the People 360 workforce. A kind of Party. In the enterprise model: a Legal Entity employs an Employee, and an Employee is in a Department. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Employee",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "employs",
+     "direction": "in",
+     "node": "Legal Entity"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Party"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "in department",
+     "direction": "out",
+     "node": "Department"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_WORKFORCE_360",
+     "fqn": "SAP_PEOPLE_360.ANALYTICS.DT_WORKFORCE_360",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_EMPLOYEE",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_EMPLOYEE",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 7,
+    "truncated": false,
+    "last": 1794852097798,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851190344,
+   "lastModifiedOn": 1794851190474,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/People/entity/Employee"
+  },
+  {
+   "termId": "122841924617",
+   "name": "GL Account",
+   "fqn": "Enterprise.Finance.GL Account",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Finance",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A general ledger account in the Finance 360 chart of accounts. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "GLAccount",
+   "edges": [],
+   "representations": [
+    {
+     "object": "DT_GL_BALANCE",
+     "fqn": "SAP_FINANCE_360.ANALYTICS.DT_GL_BALANCE",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 3,
+    "truncated": false,
+    "last": 1794852097140,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851189795,
+   "lastModifiedOn": 1794851189956,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Finance/entity/GL%20Account"
+  },
+  {
+   "termId": "122841925061",
+   "name": "Journal Entry",
+   "fqn": "Enterprise.Finance.Journal Entry",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Finance",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A posted accounting document in Finance 360. A kind of Transaction. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "JournalEntry",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Transaction"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_JOURNAL_ENTRY_360",
+     "fqn": "SAP_FINANCE_360.ANALYTICS.DT_JOURNAL_ENTRY_360",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794852097400,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851190100,
+   "lastModifiedOn": 1794851190235,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Finance/entity/Journal%20Entry"
+  },
+  {
+   "termId": "122841924613",
+   "name": "Legal Entity",
+   "fqn": "Enterprise.Legal Entity",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A company code: the golden legal entity that books revenue, owes suppliers and employs people (US, EU and Japan Operations). A kind of Org Unit. In the enterprise model: a Legal Entity employs Employees, buys from and owes Suppliers, sells to Customers, and owns Plants. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "LegalEntity",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "employs",
+     "direction": "out",
+     "node": "Employee"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "buys from",
+     "direction": "out",
+     "node": "Supplier"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "sells to",
+     "direction": "out",
+     "node": "Customer"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "member of",
+     "direction": "in",
+     "node": "Local Customer"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Org Unit"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "owned by",
+     "direction": "in",
+     "node": "Plant"
+    }
+   ],
+   "representations": [
+    {
+     "object": "VW_ONT_LEGALENTITY",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_LEGALENTITY",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_WC_MONTHLY_KPI",
+     "fqn": "SAP_WORKING_CAPITAL_360.ANALYTICS.DT_WC_MONTHLY_KPI",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "GOLDEN_COMPANY",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.GOLDEN_COMPANY",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "COMPANY_MEMBER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.COMPANY_MEMBER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_COMPANY_360",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.ANALYTICS.DT_COMPANY_360",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 13,
+    "truncated": false,
+    "last": 1794852697627,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851187422,
+   "lastModifiedOn": 1794851187622,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Legal%20Entity"
+  },
+  {
+   "termId": "122841924741",
+   "name": "Local Customer",
+   "fqn": "Enterprise.Local Customer",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A customer record as one 360 app knows it, before conforming. Each Local Customer is the same as exactly one golden Customer and is a member of a Legal Entity. A kind of Party. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "LocalCustomer",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Party"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "member of",
+     "direction": "out",
+     "node": "Legal Entity"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "same as",
+     "direction": "out",
+     "node": "Customer"
+    }
+   ],
+   "representations": [
+    {
+     "object": "VW_ONT_LOCALCUSTOMER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_LOCALCUSTOMER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "CUSTOMER_MEMBER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.CUSTOMER_MEMBER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "V_CROSSWALK",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.V_CROSSWALK",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794852095374,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851188150,
+   "lastModifiedOn": 1794851188354,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Local%20Customer"
+  },
+  {
+   "termId": "122841924805",
+   "name": "Local Supplier",
+   "fqn": "Enterprise.Local Supplier",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A supplier record as one 360 app knows it, before conforming. Each Local Supplier is the same as exactly one golden Supplier. A kind of Party. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "LocalSupplier",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Party"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "same as",
+     "direction": "out",
+     "node": "Supplier"
+    }
+   ],
+   "representations": [
+    {
+     "object": "SUPPLIER_MEMBER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.SUPPLIER_MEMBER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_LOCALSUPPLIER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_LOCALSUPPLIER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "V_CROSSWALK",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.V_CROSSWALK",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 7,
+    "truncated": false,
+    "last": 1794852096209,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851188528,
+   "lastModifiedOn": 1794851188694,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Local%20Supplier"
+  },
+  {
+   "termId": "122841924869",
+   "name": "Material",
+   "fqn": "Enterprise.Material",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A manufactured system or bill-of-materials component. A kind of Product. In the enterprise model: a Supplier supplies a component Material. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Material",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "supplies component",
+     "direction": "in",
+     "node": "Supplier"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Product"
+    }
+   ],
+   "representations": [],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794851449697,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851188837,
+   "lastModifiedOn": 1794851189025,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Material"
+  },
+  {
+   "termId": "122841923913",
+   "name": "Material Flow",
+   "fqn": "Supply Chain.Material Flow",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "A recurring movement of one material category between two entities, carrying monthly volume and value. Reified as a class because the flow itself has attributes the endpoints do not. Abstract class covering Inbound Flow, Outbound Flow, Inter Plant Flow. In the supply chain model: A Material Flow carries a Material Category (N:1). Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [
+    "MaterialFlow"
+   ],
+   "appClass": "MaterialFlow",
+   "edges": [],
+   "representations": [
+    {
+     "object": "VW_ONT_MATERIALFLOW",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_MATERIALFLOW",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "V_FLOW",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.SCENARIO.V_FLOW",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794852101477,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585661132,
+   "lastModifiedOn": 1794585694383,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Material%20Flow"
+  },
+  {
+   "termId": "122841925125",
+   "name": "Opportunity",
+   "fqn": "Enterprise.Sales.Opportunity",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Sales",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A CRM opportunity in the Sales 360 pipeline. A kind of Transaction. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Opportunity",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Transaction"
+    }
+   ],
+   "representations": [
+    {
+     "object": "CRM_OPPORTUNITY_OPPORTUNITY",
+     "fqn": "SAP_SALES_360.SALES_360_L2.CRM_OPPORTUNITY_OPPORTUNITY",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794852098042,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851190638,
+   "lastModifiedOn": 1794851190809,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Sales/entity/Opportunity"
+  },
+  {
+   "termId": "122841924485",
+   "name": "Org Unit",
+   "fqn": "Enterprise.Org Unit",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "An internal organisational unit that owns cost, revenue or people: a legal entity, department, cost center, profit center or sales organisation. Abstract: it has no instances of its own. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "OrgUnit",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Sales Org"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Legal Entity"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Cost Center"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Profit Center"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Department"
+    }
+   ],
+   "representations": [
+    {
+     "object": "VW_ONT_ORGUNIT",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_ORGUNIT",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794852093375,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851186598,
+   "lastModifiedOn": 1794851186845,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Org%20Unit"
+  },
+  {
+   "termId": "122841924293",
+   "name": "Party",
+   "fqn": "Supply Chain.Party",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "An external organisation the network trades with. Abstract, so a question about 'who is affected' can span suppliers and customers in one answer. Abstract class covering Supplier, Customer. Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Party",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Customer"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Local Customer"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Local Supplier"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Employee"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Supplier"
+    }
+   ],
+   "representations": [
+    {
+     "object": "VW_ONT_PARTY",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_PARTY",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794851446678,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585661520,
+   "lastModifiedOn": 1794585694647,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Party"
+  },
+  {
+   "termId": "122841924357",
+   "name": "Plant",
+   "fqn": "Supply Chain.Plant",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "A manufacturing site. Carries capacity (work centres, hours, spare units) and inventory (days of cover, stock value) as properties, because both are 1:1 with the plant rather than entities in their own right. A kind of Facility. In the supply chain model: A Plant can substitute for another Plant (N:N). A Plant produces a Material Category (N:N). A Plant ships to a Customer (N:N). A Plant transfers material to another Plant (N:N). A Sales Order is fulfilled by a Plant (N:1). A Supplier supplies a Plant (N:N). A System Serial is built at a Plant (N:1). An Equipment is installed at a Plant (N:1). Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Plant",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "fulfilled by",
+     "direction": "in",
+     "node": "Sales Order"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "supplies",
+     "direction": "in",
+     "node": "Supplier"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "owned by",
+     "direction": "out",
+     "node": "Legal Entity"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "ships to",
+     "direction": "out",
+     "node": "Customer"
+    }
+   ],
+   "representations": [
+    {
+     "object": "V_PLANT_CAPACITY",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.SCENARIO.V_PLANT_CAPACITY",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_OPERATING_RATE",
+     "fqn": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_OPERATING_RATE",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_COMPONENT_COVER",
+     "fqn": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_COMPONENT_COVER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "V_PLANT_BUFFER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.SCENARIO.V_PLANT_BUFFER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "V_SUBSTITUTION",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.SCENARIO.V_SUBSTITUTION",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_PLANT",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_PLANT",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "V_GEO",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.SCENARIO.V_GEO",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "A_PLANT",
+     "fqn": "SAP_SUPPLY_CHAIN.PLANT.A_PLANT",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 18,
+    "truncated": false,
+    "last": 1794852326553,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585661719,
+   "lastModifiedOn": 1794585694808,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Plant"
+  },
+  {
+   "termId": "122841924549",
+   "name": "Product",
+   "fqn": "Enterprise.Product",
+   "kind": "ENTITY",
+   "domain": "Enterprise",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "Something the business makes, sells or buys. Abstract: Material and Sellable Product are kinds of Product. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Product",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Sellable Product"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Material"
+    }
+   ],
+   "representations": [],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794851446973,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851187019,
+   "lastModifiedOn": 1794851187272,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Enterprise/entity/Product"
+  },
+  {
+   "termId": "122841924997",
+   "name": "Profit Center",
+   "fqn": "Enterprise.Finance.Profit Center",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Finance",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A Finance 360 profit center that reports revenue and margin. A kind of Org Unit. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "ProfitCenter",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Org Unit"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_REVENUE_BY_PROFITCENTER",
+     "fqn": "SAP_FINANCE_360.ANALYTICS.DT_REVENUE_BY_PROFITCENTER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794852096970,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851189491,
+   "lastModifiedOn": 1794851189670,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Finance/entity/Profit%20Center"
+  },
+  {
+   "termId": "122841925065",
+   "name": "Purchase Order",
+   "fqn": "Enterprise.Spend.Purchase Order",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Spend",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A purchase order line in Spend 360. A kind of Transaction. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "PurchaseOrder",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Transaction"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_SPEND_360",
+     "fqn": "SAP_SPEND_360.ANALYTICS.DT_SPEND_360",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794852098531,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851191476,
+   "lastModifiedOn": 1794851191911,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Spend/entity/Purchase%20Order"
+  },
+  {
+   "termId": "122841924105",
+   "name": "Sales Order",
+   "fqn": "Supply Chain.Sales Order",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "A customer order line for an inspection system, with OTIF outcome and late cost. A kind of Transaction. In the supply chain model: A Sales Order is fulfilled by a Plant (N:1). A Sales Order is placed by a Customer (N:1). A System Serial is shipped on a Sales Order (N:1). Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [
+    "SalesOrder"
+   ],
+   "appClass": "SalesOrder",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "fulfilled by",
+     "direction": "out",
+     "node": "Plant"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "placed by",
+     "direction": "out",
+     "node": "Customer"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Transaction"
+    }
+   ],
+   "representations": [
+    {
+     "object": "DT_ORDER_FULFILLMENT",
+     "fqn": "SAP_SUPPLY_CHAIN.ANALYTICS.DT_ORDER_FULFILLMENT",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_SALESORDER",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_SALESORDER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794597366157,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585661883,
+   "lastModifiedOn": 1794585694951,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Sales%20Order"
+  },
+  {
+   "termId": "122841925001",
+   "name": "Sales Org",
+   "fqn": "Enterprise.Sales.Sales Org",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Sales",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A Sales 360 sales organisation. A kind of Org Unit. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "SalesOrg",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Org Unit"
+    }
+   ],
+   "representations": [],
+   "history": {
+    "events": 3,
+    "truncated": false,
+    "last": 1794851446142,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851190925,
+   "lastModifiedOn": 1794851191099,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Sales/entity/Sales%20Org"
+  },
+  {
+   "termId": "122841924873",
+   "name": "Sellable Product",
+   "fqn": "Enterprise.Sales.Sellable Product",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Sales",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "An SAP product master record that can be sold. A kind of Product. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "SellableProduct",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Product"
+    }
+   ],
+   "representations": [
+    {
+     "object": "PRODUCT_PRODUCT",
+     "fqn": "SAP_SALES_360.SALES_360_L2.PRODUCT_PRODUCT",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 4,
+    "truncated": false,
+    "last": 1794852098237,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851191214,
+   "lastModifiedOn": 1794851191351,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Sales/entity/Sellable%20Product"
+  },
+  {
+   "termId": "122841925189",
+   "name": "Spend Category",
+   "fqn": "Enterprise.Spend.Spend Category",
+   "kind": "ENTITY",
+   "domain": "Enterprise.Spend",
+   "owner": "Enterprise",
+   "status": "ACTIVE",
+   "description": "A procurement category in Spend 360. In the enterprise model: a Supplier is in a Spend Category. Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "SpendCategory",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "in category",
+     "direction": "in",
+     "node": "Supplier"
+    }
+   ],
+   "representations": [
+    {
+     "object": "VW_ONT_SPENDCATEGORY",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_ONT_SPENDCATEGORY",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_CATEGORY_HIERARCHY",
+     "fqn": "SAP_SPEND_360.ANALYTICS.DT_CATEGORY_HIERARCHY",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 5,
+    "truncated": false,
+    "last": 1794852098924,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794851192039,
+   "lastModifiedOn": 1794851192184,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Spend/entity/Spend%20Category"
+  },
+  {
+   "termId": "122841923977",
+   "name": "Supplier",
+   "fqn": "Supply Chain.Supplier",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "An organisation that ships material into a plant. A kind of Party. In the supply chain model: A Component Lot is supplied by a Supplier (N:1). A Supplier supplies a Plant (N:N). Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Supplier",
+   "edges": [
+    {
+     "type": "CUSTOM",
+     "label": "supplies component",
+     "direction": "out",
+     "node": "Material"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "supplied by",
+     "direction": "in",
+     "node": "Component Lot"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "buys from",
+     "direction": "in",
+     "node": "Legal Entity"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "payable to",
+     "direction": "in",
+     "node": "AP Invoice"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "supplies",
+     "direction": "out",
+     "node": "Plant"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "same as",
+     "direction": "in",
+     "node": "Local Supplier"
+    },
+    {
+     "type": "CUSTOM",
+     "label": "in category",
+     "direction": "out",
+     "node": "Spend Category"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "out",
+     "node": "Party"
+    }
+   ],
+   "representations": [
+    {
+     "object": "GOLDEN_SUPPLIER",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.XWALK.GOLDEN_SUPPLIER",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_ONT_SUPPLIER",
+     "fqn": "SAP_SUPPLY_CHAIN.ONTOLOGY.VW_ONT_SUPPLIER",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "DT_SUPPLIER_360",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.ANALYTICS.DT_SUPPLIER_360",
+     "objectType": "Table",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_SUPPLIER_QUALITY_EXPOSURE",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_SUPPLIER_QUALITY_EXPOSURE",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    },
+    {
+     "object": "VW_SUPPLIER_TO_CUSTOMER_EXPOSURE",
+     "fqn": "SAP_ENTERPRISE_ONTOLOGY.CORE.VW_SUPPLIER_TO_CUSTOMER_EXPOSURE",
+     "objectType": "View",
+     "role": "DESCRIBES",
+     "validity": "VALID"
+    }
+   ],
+   "history": {
+    "events": 15,
+    "truncated": false,
+    "last": 1794852100455,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585662006,
+   "lastModifiedOn": 1794585695140,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Supplier"
+  },
+  {
+   "termId": "122841924041",
+   "name": "Transaction",
+   "fqn": "Supply Chain.Transaction",
+   "kind": "ENTITY",
+   "domain": "Supply Chain",
+   "owner": "Supply Chain",
+   "status": "ACTIVE",
+   "description": "A business document that commits the supply chain to deliver. Abstract class covering Sales Order. Source: Supply Chain Ontology app, SAP_SUPPLY_CHAIN.ONTOLOGY.",
+   "synonyms": [],
+   "appClass": "Transaction",
+   "edges": [
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Journal Entry"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "AP Invoice"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Opportunity"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Sales Order"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "Purchase Order"
+    },
+    {
+     "type": "IS_A",
+     "label": null,
+     "direction": "in",
+     "node": "AR Invoice"
+    }
+   ],
+   "representations": [],
+   "history": {
+    "events": 8,
+    "truncated": false,
+    "last": 1794851447764,
+    "changedBy": [
+     "DFRERIKS"
+    ]
+   },
+   "createdOn": 1794585662365,
+   "lastModifiedOn": 1794585695404,
+   "snowsightUrl": "https://app.snowflake.com/sfsenorthamerica/dfreriks_aws1_w2/#/data/business-ontology/domain/Supply%20Chain/entity/Transaction"
+  }
+ ],
+ "relationships": [
+  {
+   "source": "Supplier",
+   "target": "Material",
+   "type": "CUSTOM",
+   "label": "supplies component"
+  },
+  {
+   "source": "Legal Entity",
+   "target": "Employee",
+   "type": "CUSTOM",
+   "label": "employs"
+  },
+  {
+   "source": "Component Lot",
+   "target": "Supplier",
+   "type": "CUSTOM",
+   "label": "supplied by"
+  },
+  {
+   "source": "Customer",
+   "target": "Party",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Legal Entity",
+   "target": "Supplier",
+   "type": "CUSTOM",
+   "label": "buys from"
+  },
+  {
+   "source": "Sellable Product",
+   "target": "Product",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Local Customer",
+   "target": "Party",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Local Supplier",
+   "target": "Party",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Material",
+   "target": "Product",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "AP Invoice",
+   "target": "Supplier",
+   "type": "CUSTOM",
+   "label": "payable to"
+  },
+  {
+   "source": "Sales Order",
+   "target": "Plant",
+   "type": "CUSTOM",
+   "label": "fulfilled by"
+  },
+  {
+   "source": "Legal Entity",
+   "target": "Customer",
+   "type": "CUSTOM",
+   "label": "sells to"
+  },
+  {
+   "source": "Journal Entry",
+   "target": "Transaction",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "AR Invoice",
+   "target": "Customer",
+   "type": "CUSTOM",
+   "label": "owed by"
+  },
+  {
+   "source": "Local Customer",
+   "target": "Legal Entity",
+   "type": "CUSTOM",
+   "label": "member of"
+  },
+  {
+   "source": "Employee",
+   "target": "Party",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "AP Invoice",
+   "target": "Transaction",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Opportunity",
+   "target": "Transaction",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Supplier",
+   "target": "Plant",
+   "type": "CUSTOM",
+   "label": "supplies"
+  },
+  {
+   "source": "Sales Org",
+   "target": "Org Unit",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Local Supplier",
+   "target": "Supplier",
+   "type": "CUSTOM",
+   "label": "same as"
+  },
+  {
+   "source": "Local Customer",
+   "target": "Customer",
+   "type": "CUSTOM",
+   "label": "same as"
+  },
+  {
+   "source": "Legal Entity",
+   "target": "Org Unit",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Sales Order",
+   "target": "Customer",
+   "type": "CUSTOM",
+   "label": "placed by"
+  },
+  {
+   "source": "Supplier",
+   "target": "Spend Category",
+   "type": "CUSTOM",
+   "label": "in category"
+  },
+  {
+   "source": "Cost Center",
+   "target": "Org Unit",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Supplier",
+   "target": "Party",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Profit Center",
+   "target": "Org Unit",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Sales Order",
+   "target": "Transaction",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Employee",
+   "target": "Department",
+   "type": "CUSTOM",
+   "label": "in department"
+  },
+  {
+   "source": "Plant",
+   "target": "Legal Entity",
+   "type": "CUSTOM",
+   "label": "owned by"
+  },
+  {
+   "source": "Department",
+   "target": "Cost Center",
+   "type": "CUSTOM",
+   "label": "funded by"
+  },
+  {
+   "source": "Department",
+   "target": "Org Unit",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "Plant",
+   "target": "Customer",
+   "type": "CUSTOM",
+   "label": "ships to"
+  },
+  {
+   "source": "Purchase Order",
+   "target": "Transaction",
+   "type": "IS_A",
+   "label": null
+  },
+  {
+   "source": "AR Invoice",
+   "target": "Transaction",
+   "type": "IS_A",
+   "label": null
+  }
+ ]
+}

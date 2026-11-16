@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
     "build": "npm run build -w client && npm run build -w server",
     "start": "npm run start -w server",
-    "export-data": "python3 tools/export_enterprise.py && python3 tools/export_lineage.py",
+    "export-data": "python3 tools/export_business_ontology.py && python3 tools/export_enterprise_ontology.py && python3 tools/export_lineage.py",
     "verify": "npx tsx tools/verify_ent_mitigation.ts",
     "bake": "python3 tools/bake_static.py",
     "build:static": "cd client && VITE_STATIC=1 npx vite build --outDir dist-static",

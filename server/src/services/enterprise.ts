@@ -1,23 +1,26 @@
 /**
- * Enterprise master ontology across the six SAP BDC 360 apps.
+ * Enterprise master ontology across the six SAP BDC 360 apps, built on Snowflake
+ * Business Ontology.
  *
- * Served from data/enterprise_ontology.json (tools/export_enterprise.py), which
- * reads only SAP_ENTERPRISE_ONTOLOGY. Ask Cortex passes the relevant slice to
- * AI_COMPLETE as facts, the same grounding pattern as thread.ts / reason.ts.
+ * Served from data/enterprise_ontology.json, which tools/export_enterprise_ontology.py
+ * builds by walking the governed Enterprise domain and reading each concept's
+ * representations. Ask Cortex passes the relevant slice to AI_COMPLETE as facts,
+ * together with the governed definitions it relies on.
  */
 import fs from "node:fs";
 import path from "node:path";
-import { runSql } from "./analyst.js";
+import { runSql } from "./snowflake.js";
+import { loadBusinessOntology, boSummary, boNodeFor } from "./businessOntology.js";
 import { runScenario, PRESETS, type Scenario } from "../lib/entScenario.js";
 import { analyse } from "../lib/entImpact.js";
 
-const MODEL = process.env.CORTEX_MODEL ?? process.env.SCENARIO_LLM_MODEL ?? "claude-sonnet-4-5";
+const MODEL = process.env.CORTEX_MODEL ?? process.env.SCENARIO_LLM_MODEL ?? "claude-opus-5-5";
 let _e: any = null;
 
 export function loadEnterprise(): any {
   if (_e) return _e;
   const f = path.resolve(import.meta.dirname, "../../../data/enterprise_ontology.json");
-  if (!fs.existsSync(f)) throw new Error(`Enterprise ontology not found at ${f}. Run tools/export_enterprise.py.`);
+  if (!fs.existsSync(f)) throw new Error(`Enterprise ontology not found at ${f}. Run tools/export_enterprise_ontology.py.`);
   _e = JSON.parse(fs.readFileSync(f, "utf-8"));
   return _e;
 }
@@ -35,8 +38,8 @@ export function loadLineage(): any {
 
 export function summary() {
   const e = loadEnterprise();
-  return { stats: e.stats, modules: e.modules, companies: e.companies, notes: e.notes,
-           relations: e.relations, departments: e.departments,
+  return { stats: e.stats, ontology: boSummary(loadBusinessOntology()), companies: e.companies, notes: e.notes,
+           departments: e.departments,
            top_customers: e.customers.slice(0, 8), top_suppliers: e.suppliers.slice(0, 8) };
 }
 
@@ -58,7 +61,8 @@ export function supplier(id: string) {
 
 // ------------------------------------------------------------- Ask Cortex
 const SYSTEM = `Before answering, check that every number and characterisation in your summary (profit vs loss, up vs down, ages, counts, totals) matches the facts and any table you include; never state a figure the facts do not support.
-You are Snowflake Cortex, an enterprise analyst. The facts below come from a master ontology that
+You are Snowflake Cortex, an enterprise analyst. The facts below come from a master ontology governed in
+Snowflake Business Ontology (domain "Enterprise", reusing the governed "Supply Chain" concepts) that
 conforms six SAP BDC 360 applications — Finance (FIN), Sales (SAL), People (PPL), Spend (SPD), Working
 Capital (WCP) and Supply Chain (SCM) — through golden legal entities, customers and suppliers. Treat the
 facts as authoritative; never invent numbers. Lead with the direct answer, then evidence (a small markdown
@@ -67,12 +71,27 @@ supplier identity comes from a demo crosswalk; mention it when an answer depends
 Money is USD. If the facts do not cover the question, say so plainly rather than guessing. Supply Chain
 and some other apps use demo enrichment (see notes / lineage provenance); flag figures that rest on demo or
 simulated data, and say that scenario results are simulations, not forecasts. Under 300 words. For a scenario, explain the propagation path, the biggest effect per app,
-and the decision it implies; state the scenario's assumptions where they change the answer.`;
+and the decision it implies; state the scenario's assumptions where they change the answer.
+When the facts include governed_concepts, take each concept's meaning from it, name the governed
+relationships you relied on (e.g. Legal Entity -buys from-> Supplier, Local Supplier -same as-> Supplier),
+and say "governed definition (Snowflake Business Ontology)" when you quote one.`;
+
+/** The governed concepts and relationships, compact enough to ride along with any topic. */
+function governed() {
+  const bo = loadBusinessOntology();
+  if (!bo) return null;
+  return {
+    domain: bo.domain, counts: bo.counts,
+    concepts: bo.nodes.map((n) => ({ name: n.name, domain: n.domain, owner: n.owner,
+                                     definition: String(n.description ?? "").slice(0, 240) })),
+    relationships: bo.relationships.map((r) => `${r.source} -${r.label ?? r.type}-> ${r.target}`),
+  };
+}
 
 function factsFor(topic: string, a: Record<string, any>): unknown {
   const e = loadEnterprise();
   switch (topic) {
-    case "ent-overview": return { stats: e.stats, modules: e.modules, companies: e.companies, notes: e.notes };
+    case "ent-overview": return { stats: e.stats, governed_concepts: governed(), companies: e.companies, notes: e.notes };
     case "ent-lineage": {
       const l = loadLineage();
       return { counts: l.counts, notes: l.notes, layers: l.layers,
@@ -85,7 +104,12 @@ function factsFor(topic: string, a: Record<string, any>): unknown {
     case "ent-supplier": return supplier(String(a.id)) ?? { error: "supplier not found" };
     case "ent-customers": return { customers: e.customers, notes: e.notes };
     case "ent-suppliers": return { suppliers: e.suppliers, exposure: e.exposure, notes: e.notes };
-    case "ent-model": return { classes: e.classes, relations: e.relations, modules: e.modules };
+    case "ent-model": {
+      const n = a.concept ? boNodeFor(loadBusinessOntology(), String(a.concept)) : null;
+      return { concept: n && { name: n.name, domain: n.domain, owner: n.owner, definition: n.description,
+                               relationships: n.edges, representations: n.representations.map((r) => r.fqn) },
+               governed_concepts: governed() };
+    }
     case "ent-crosswalk": return { summary: e.crosswalk_summary, notes: e.notes };
     case "ent-people": return { departments: e.departments, companies: e.companies.map((c: any) => ({
       company: c.company, headcount: c.headcount, terminations: c.terminations, salary_cost_usd: c.salary_cost_usd,
@@ -117,19 +141,11 @@ function factsFor(topic: string, a: Record<string, any>): unknown {
     case "general": {
       // Compact cross-page fact set for the Ask Cortex landing page.
       const l = loadLineage();
-      return { stats: e.stats, modules: e.modules, companies: e.companies, notes: e.notes,
+      return { stats: e.stats, governed_concepts: governed(), companies: e.companies, notes: e.notes,
                top_customers: e.customers.slice(0, 10), top_suppliers: e.suppliers.slice(0, 10),
                quality_exposure: e.exposure.slice(0, 10), crosswalk: e.crosswalk_summary,
                departments: e.departments, lineage_counts: l.counts,
                scenario_presets: PRESETS.map((p) => ({ id: p.id, label: (p as any).label })) };
-    }
-    case "ent-graph": {
-      const g = e.graph; const count = (xs: any[], k: string) => xs.reduce((m: any, x: any) => (m[x[k]] = (m[x[k]] ?? 0) + 1, m), {});
-      const deg: Record<string, number> = {};
-      for (const ed of g.edges) { deg[ed.source] = (deg[ed.source] ?? 0) + 1; deg[ed.target] = (deg[ed.target] ?? 0) + 1; }
-      const hubs = Object.entries(deg).sort((a, b) => b[1] - a[1]).slice(0, 15)
-        .map(([id, d]) => { const n = g.nodes.find((x: any) => x.id === id); return { id, label: n?.label, type: n?.type, module: n?.module, degree: d }; });
-      return { nodes_by_type: count(g.nodes, "type"), edges_by_module: count(g.edges, "module"), hubs, relations: e.relations, notes: e.notes };
     }
     case "ent-usecases": return { companies: e.companies, top_customers: e.customers.slice(0, 8),
       top_suppliers: e.suppliers.slice(0, 8), exposure: e.exposure.slice(0, 12), notes: e.notes };
@@ -140,7 +156,7 @@ function factsFor(topic: string, a: Record<string, any>): unknown {
 }
 
 export const ENTERPRISE_TOPICS = ["ent-overview", "ent-lineage", "ent-impact", "ent-risk", "ent-mitigation", "ent-companies", "ent-customer", "ent-supplier", "ent-customers",
-  "ent-suppliers", "ent-model", "ent-crosswalk", "ent-people", "ent-scenario", "ent-usecase", "ent-usecases", "ent-graph", "general"];
+  "ent-suppliers", "ent-model", "ent-crosswalk", "ent-people", "ent-scenario", "ent-usecase", "ent-usecases", "general"];
 
 export async function askEnterprise(topic: string, a: Record<string, any>, question: string): Promise<string> {
   const facts = JSON.stringify(factsFor(topic, a)).slice(0, 60000);

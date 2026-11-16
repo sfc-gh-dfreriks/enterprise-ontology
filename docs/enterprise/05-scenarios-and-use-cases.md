@@ -7,12 +7,15 @@ without Snowflake); the server imports the same file to give Ask Cortex the iden
 
 | Scenario | Path through the ontology | Inputs |
 |---|---|---|
-| Supplier failure | Supplier → supplies → Plant → shipsTo → Customer; Plant → ownedBy → LegalEntity; LegalEntity → buysFrom / owesTo → Supplier | weeks out, share covered by an alternate source |
-| Plant outage | Plant → shipsTo → Customer; Plant → ownedBy → LegalEntity; Supplier → supplies → Plant | weeks down |
-| Customer default | LegalEntity → sellsToCustomer → Customer ← shipsTo Plant | recovery % |
-| FX shock | LegalEntity reports in currency | currency, % vs USD |
-| Payment terms | LegalEntity → owesTo → Supplier → supplies → Plant | days later to pay, days sooner to collect |
-| Workforce | LegalEntity → employs → Employee; LegalEntity ← ownedBy Plant | company, % headcount |
+| Supplier failure | Supplier → supplies → Plant → ships to → Customer; Plant → owned by → Legal Entity; Legal Entity → buys from → Supplier ← payable to AP Invoice | weeks out, share covered by an alternate source |
+| Plant outage | Plant → ships to → Customer; Plant → owned by → Legal Entity; Supplier → supplies → Plant | weeks down |
+| Customer default | Legal Entity → sells to → Customer ← owed by AR Invoice; Customer ← ships to Plant | recovery % |
+| FX shock | Legal Entity reports in currency | currency, % vs USD |
+| Payment terms | AP Invoice → payable to → Supplier → supplies → Plant | days later to pay, days sooner to collect |
+| Workforce | Legal Entity → employs → Employee; Legal Entity ← owned by Plant | company, % headcount |
+
+Paths use the governed relationship names; *supplies*, *ships to* and *owned by* are Supply Chain relationships between
+reused concepts.
 
 **Shares, not summed dollars.** Supply Chain plant value and margin are weekly rates over the measured order period (2025-01-11 to 2025-09-29, 262 days);
 Finance and Working Capital use their own monthly revenue; Sales uses each customer's CRM pipeline. A lost share of plant
@@ -57,12 +60,12 @@ runs the scenario, plus its own Ask Cortex.
 
 - **Impact Map** — the same propagation as nodes and hops. Plants, suppliers and customers are placed at their Supply Chain 360
   addresses; legal entities at their first plant (an assumption). Timing uses each plant's minimum days of inventory.
-- **Risk Outcome** — each app graded against its own base (Low < 1%, Moderate 1–5%, High 5–15%, Critical ≥ 15%), a
+- **Risk outcome** (embedded below Mitigation & Recovery; a separate page until November 2026) — each app graded against its own base (Low < 1%, Moderate 1–5%, High 5–15%, Critical ≥ 15%), a
   time-to-impact view, single points of failure (single-source suppliers, sole-maker plants) and a register. Inherent
   and residual risk side by side.
 - **Mitigation & Recovery** — levers *from data*: run on stock held, reroute a category only to a plant that has shipped it and
   only within its free work-center hours (a plant fed by the failed supplier is excluded), hold payables, pause POs,
-  collect overdue receivables. Levers that are *assumptions* are labelled: second source, hedge ratio, credit insurance,
+  collect overdue receivables. During playback red marks a lane being replaced and dashed green its reroute. Levers that are *assumptions* are labelled: second source, hedge ratio, credit insurance,
   re-sale of freed capacity, plant-facing share of a headcount cut. Re-sold capacity is new margin, never netted
   against a write-off.
 

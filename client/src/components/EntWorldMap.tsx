@@ -17,7 +17,12 @@ export interface EntMapProps {
   overlays?: Overlay[]; height?: number;
   /** Nodes whose hit is shown as protected (green) rather than at risk. */
   protectedNodes?: Set<string>;
+  /** Before/after: link ids being replaced by a mitigation, drawn solid red; other lanes fade. */
+  replaced?: Set<string>;
 }
+
+const OLD_LANE = "#ef4444";
+const NEW_LANE = "#22c55e";
 
 const W = 1000, H = 500, LAT_TOP = 78, LAT_BOTTOM = -58, MIN_SPAN = 190, CAMERA_MS = 780;
 interface Box { x: number; y: number; w: number; h: number }
@@ -45,7 +50,8 @@ function frame(pts: [number, number][]): Box {
 }
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
-export function EntWorldMap({ nodes, links, nodeHits = {}, linkHits = {}, revealHop, highlight, focus, overlays = [], height = 440, protectedNodes }: EntMapProps) {
+export function EntWorldMap({ nodes, links, nodeHits = {}, linkHits = {}, revealHop, highlight, focus, overlays = [], height = 440, protectedNodes, replaced }: EntMapProps) {
+  const contrast = !!replaced && replaced.size > 0;
   const [land, setLand] = useState<number[][][][] | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number; lines: string[] } | null>(null);
   const [box, setBox] = useState<Box>(FULL);
@@ -117,12 +123,14 @@ export function EntWorldMap({ nodes, links, nodeHits = {}, linkHits = {}, reveal
             const lit = !spot || highlight!.has(l.id);
             const [x1, y1] = project(a.lon!, a.lat!), [x2, y2] = project(b.lon!, b.lat!);
             const w = (hit ? 1.2 + 4 * Math.sqrt(h!.valueUsd / maxLink) : 0.8) * k;
+            const old = contrast && replaced!.has(l.id);
             return (
-              <path key={l.id} d={arcPath(x1, y1, x2, y2)} stroke={hit ? severityColor(h!.severity) : "#475569"}
-                strokeWidth={hit && lit ? w * 1.6 : w} strokeOpacity={hit ? (lit ? 1 : 0.22) : spot ? 0.1 : 0.28}
+              <path key={l.id} d={arcPath(x1, y1, x2, y2)} stroke={old ? OLD_LANE : hit ? severityColor(h!.severity) : "#475569"}
+                strokeWidth={old ? Math.max(w * 1.4, 2.6 * k) : hit && lit ? w * 1.6 : w}
+                strokeOpacity={old ? 0.95 : contrast ? (hit ? 0.16 : 0.1) : hit ? (lit ? 1 : 0.22) : spot ? 0.1 : 0.28}
                 strokeDasharray={l.rel === "ownedBy" ? `${3 * k} ${3 * k}` : undefined}
                 style={{ transition: "stroke-opacity 300ms, stroke-width 300ms" }}
-                onMouseEnter={(e) => tip(e, [`${a.name} → ${b.name}`, l.rel, ...(hit && h!.valueUsd ? [`${fmt(h!.valueUsd)} at risk · hop ${h!.hop}`] : [])])}
+                onMouseEnter={(e) => tip(e, [`${a.name} → ${b.name}`, l.rel, ...(old ? ["OLD LANE · replaced by the green reroute"] : []), ...(hit && h!.valueUsd ? [`${fmt(h!.valueUsd)} at risk · hop ${h!.hop}`] : [])])}
                 onMouseLeave={() => setHover(null)} />
             );
           })}
@@ -133,7 +141,7 @@ export function EntWorldMap({ nodes, links, nodeHits = {}, linkHits = {}, reveal
             const a = byId.get(o.from), b = byId.get(o.to);
             if (!a || !b) return null;
             const [x1, y1] = project(a.lon!, a.lat!), [x2, y2] = project(b.lon!, b.lat!);
-            return <path key={o.id} d={arcPath(x1, y1, x2, y2, -0.3)} stroke={o.color ?? "#22c55e"} strokeWidth={2.6 * k}
+            return <path key={o.id} d={arcPath(x1, y1, x2, y2, -0.3)} stroke={o.color ?? NEW_LANE} strokeWidth={(contrast ? 3.2 : 2.6) * k}
               strokeDasharray={`${7 * k} ${5 * k}`} strokeOpacity={0.95}
               onMouseEnter={(e) => tip(e, [o.label])} onMouseLeave={() => setHover(null)} />;
           })}
@@ -175,7 +183,8 @@ export function EntWorldMap({ nodes, links, nodeHits = {}, linkHits = {}, reveal
         <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5" style={{ background: TYPE_COLOR.Plant }} /> plant</span>
         <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: TYPE_COLOR.Customer }} /> customer</span>
         <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rotate-45 border border-amber-400" style={{ background: TYPE_COLOR.LegalEntity }} /> legal entity</span>
-        {overlays.length > 0 && <span className="flex items-center gap-1"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="#22c55e" strokeWidth="2.4" strokeDasharray="7 5" /></svg> mitigation</span>}
+        {overlays.length > 0 && <span className="flex items-center gap-1"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke={NEW_LANE} strokeWidth="2.4" strokeDasharray="7 5" /></svg> {contrast ? "new lane (reroute)" : "mitigation"}</span>}
+        {contrast && <span className="flex items-center gap-1"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke={OLD_LANE} strokeWidth="3" /></svg> old lane (replaced)</span>}
         <span>thickness = value at risk · colour = share hit · ring = hop</span>
         {k < 0.99 && <span className="ml-auto rounded bg-slate-100 px-1.5 text-[10px]">zoomed {(1 / k).toFixed(1)}×</span>}
       </div>

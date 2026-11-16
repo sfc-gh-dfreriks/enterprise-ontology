@@ -9,6 +9,7 @@ import { EntWorldMap, type Overlay } from "../../components/EntWorldMap";
 import { Playback, ScenarioBar, ScenarioTabs } from "../../components/EntScenarioBits";
 import { Caveat, ModuleChips, Panel } from "../../components/EntBits";
 import { kpiVal } from "./EntImpact";
+import { BuiltOn } from "../../components/SourceBadge";
 
 const STEP_COLOR = (g: number) => (g === 0 ? "#dc2626" : g === 1 ? "#16a34a" : "#0ea5e9");
 
@@ -35,6 +36,9 @@ export default function EntMitigation({ onNavigate }: { onNavigate: (p: string) 
   const cur: Action | undefined = i > 0 && i < steps.length - 1 ? moves[i - 1] : undefined;
   const overlays: Overlay[] = applied.filter((x) => x.from && x.to && x.from !== x.to)
     .map((x) => ({ id: x.id, from: x.from!, to: x.to!, label: `${x.title} · protects ${fmt(x.protectedUsd)}` }));
+  // The lanes a reroute replaces: the damaged plant's "ships to" lanes, drawn red against the green reroute.
+  const rerouted = new Set(applied.filter((x) => x.lever === "reroute" && x.from).map((x) => x.from!));
+  const replaced = new Set(imp.links.filter((l) => l.rel === "shipsTo" && rerouted.has(l.source)).map((l) => l.id));
   const touched = new Set(applied.flatMap((x) => [x.to, x.from]).filter(Boolean) as string[]);
   // a node turns green once every action touching it is applied and its residual is small
   const protectedNodes = new Set([...touched].filter((id) => !moves.some((x) => (x.to === id || x.from === id) && !applied.includes(x))));
@@ -46,6 +50,7 @@ export default function EntMitigation({ onNavigate }: { onNavigate: (p: string) 
 
   return (
     <div className="space-y-4">
+      <BuiltOn walks="Reroutes go to a Plant that produces the same category and has spare hours (Plant's V_SUBSTITUTION and V_PLANT_CAPACITY). Old lanes red, reroutes dashed green." />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <ScenarioTabs page="ent-mitigation" onNavigate={onNavigate} />
         <AskCortex key={JSON.stringify(askArgs)} topic="ent-mitigation" args={askArgs} label="Ask Cortex: should we approve this plan?"
@@ -88,9 +93,9 @@ export default function EntMitigation({ onNavigate }: { onNavigate: (p: string) 
         </Panel>
 
         <div className="space-y-4">
-          <Panel title="Recovery on the network" right={<span className="text-xs text-slate-500">dashed green = mitigation · green node = protected</span>}>
+          <Panel title="Recovery on the network" right={<span className="text-xs text-slate-500">red = old lane being replaced · dashed green = new lane · green node = protected</span>}>
             <EntWorldMap nodes={imp.nodes} links={imp.links} nodeHits={imp.nodeHits} linkHits={imp.linkHits}
-              overlays={overlays} protectedNodes={protectedNodes} focus={focus} height={360} />
+              overlays={overlays} protectedNodes={protectedNodes} replaced={replaced} focus={focus} height={360} />
             <div className="mt-3">
               <div className="flex justify-between text-[11px] text-slate-500"><span>protected so far</span><span>{fmt(protectedSoFar)} of {fmt(m.atRiskUsd)}</span></div>
               <div className="mt-1 flex h-3 overflow-hidden rounded bg-rose-200">

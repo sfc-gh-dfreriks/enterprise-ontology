@@ -82,8 +82,15 @@ USE_CASES = [
     ("CHRO / COO", "Where is a headcount reduction safe — and where would it compound a delivery problem?"),
 ]
 
-MOD_NAME = {"CORE": "Enterprise core", "FIN": "Finance 360", "SAL": "Sales 360", "PPL": "People 360",
-            "SPD": "Spend 360", "WCP": "Working Capital 360", "SCM": "Supply Chain 360"}
+BO = F["bo"]
+REL_TYPES = ", ".join(f"{v} {k}" for k, v in sorted(BO["relationships_by_type"].items(), key=lambda kv: kv[0] != "IS_A"))
+
+
+def domain_rows():
+    return [[d["domain"], d["concepts"], ", ".join(d["names"])] for d in BO["domains"]]
+
+
+DOMAIN_HEAD = ["Governed domain", "Concepts", "Names"]
 
 
 def n(v, d=0):
@@ -99,7 +106,9 @@ def eight_numbers():
     us = next(c for c in F["companies"] if c["company"] == "US Operations")
     top = SC[0]
     return [
-        (f"{F['classes']} classes, {F['relations']} relations", "one ontology over six 360 apps"),
+        (f"{BO['concepts']} governed concepts, {BO['enterprise_relationships']} relationships",
+         f"Snowflake Business Ontology: {BO['owned']} owned by Enterprise, {BO['reused']} reused from Supply Chain; "
+         f"{BO['representations']} representations"),
         (f"{n(F['kg_nodes'])} nodes / {n(F['kg_edges'])} edges", f"knowledge graph, {F['dangling_edges']} dangling edges"),
         (f"{n(F['crosswalk_records'])} records → {F['golden_customers'] + F['golden_suppliers']} golden",
          f"{F['golden_customers']} customers and {F['golden_suppliers']} suppliers conformed across apps"),
@@ -124,6 +133,11 @@ def caveats():
          "orders. Compare within an app, not across."),
         ("Company mapping.", "Supply Chain plants carry company codes 1000/2000/3000; they are mapped to US, EU and Japan "
          "Operations by region. On the maps each legal entity sits at its first plant."),
+        ("Private preview.", f"Snowflake Business Ontology is enabled on the US account only ({BO['account']}). The EU and "
+         "APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is "
+         "parity-checked against US, the governed graph is not replicated."),
+        ("Demo enrichment.", "Some 360 inputs are demo enrichment or CRM export rather than an SAP BDC data product; "
+         "BDC Lineage labels each one."),
         ("Mitigation.", "Reroutes, stock cover and capacity come from Supply Chain 360 data and are planning grade. Second source, "
          "hedging, insurance and re-sale are labelled assumptions you set."),
     ]
@@ -151,7 +165,10 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 
 - **Live app:** React + Express, `npm run dev` (server 3011, client 5186)
 - **Public build (no Snowflake needed):** {F['site']}
-- **Snowflake:** `{F['database']}` — semantic view `{F['semantic_view']}`, agent `{F['agent']}`
+- **Ontology:** Snowflake Business Ontology on `{BO['account']}` — governed domain **{BO['domain']}** with subdomains
+  {', '.join(d.split('.', 1)[1] for d in BO['subdomains'])}, reusing {BO['reused']} concepts of the governed
+  **Supply Chain** domain
+- **Instance data:** `{F['database']}` — crosswalk, knowledge graph (`CORE.KG_NODE` / `KG_EDGE`), 360 facts, scenario network
 
 ## In numbers
 
@@ -161,21 +178,40 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 
 {comp}
 
+## Governed ontology
+
+The model is no longer app-owned tables: it is the **Snowflake Business Ontology**. {BO['owned']} concepts are governed in
+{BO['domain']} and its subdomains; {BO['reused']} ({', '.join(BO['reused_names'])}) are reused from Supply Chain, not
+redefined. {BO['enterprise_relationships']} Enterprise relationships ({REL_TYPES}; custom verbs: {', '.join(BO['custom_verbs'])}),
+{BO['relationships']} in the snapshot including Supply Chain's own between reused concepts. {BO['representations']}
+representations link concepts to the Snowflake objects that implement them, including {len(BO['new_class_views'])} class views
+(`sql/enterprise/07_business_ontology_views.sql`). {', '.join(BO['unrepresented'])} have no representation (abstract, or no
+source object).
+
+{md_table(DOMAIN_HEAD, domain_rows())}
+
+The exporter finds every input through a representation, so a concept that loses its representation fails the export.
+Instance links stay in the knowledge graph — {n(F['kg_nodes'])} nodes, {n(F['kg_edges'])} edges — and each edge type is
+checked against the governed relationship it instantiates.
+
 ## Pages
 
 {chr(10).join(f"- **{p}**" for p in F['enterprise_pages'])}
 
-**Ask Cortex** is the first sidebar item, and every enterprise page has an *Ask Cortex about <page>* button under its
-header with two suggested questions ({F['ask_topics']} grounded topics). The server gathers the view's live facts from the
-app's own tables and asks `AI_COMPLETE` (default `claude-sonnet-4-5`, override with `CORTEX_MODEL`) for a markdown analysis,
+The app opens on **Ontology**, the governed graph drawn natively. Every enterprise page has an *Ask Cortex* button under its
+header with two suggested questions ({F['ask_topics']} grounded topics), and a "built on Snowflake Business Ontology" line.
+The server gathers the view's live facts plus the governed definitions and relationships of the concepts on screen and asks
+`AI_COMPLETE` (default `claude-opus-5-5`, override with `CORTEX_MODEL`) for a markdown analysis,
 run as a background job the client polls every 2 s (`POST`/`GET /api/ask-cortex`). The public build ships the default
 analysis baked at build time.
 
 ## Build
 
 ```bash
-# Snowflake layer (US is the source of truth): 01..06
+# Snowflake layer (US is the source of truth): 01..07 (07 = class views the Business Ontology represents)
 for f in sql/enterprise/0*.sql; do snow sql -c dfreriksdemo -f "$f"; done
+python3 tools/export_business_ontology.py            # governed graph -> data/ent_business_ontology.json
+python3 tools/export_enterprise_ontology.py --check  # parity gate: walk representations, compare with the served export
 python3 tools/deploy_region.py dfreriks_eu_demo     # and dfreriks_apac_demo — gated on parity with US
 # Everything else in one command: export, verify the engine, bake the public site,
 # regenerate README, docs and presales kit, then reconcile against Snowflake
@@ -192,11 +228,12 @@ different scales, so the shock travels as a *share* of activity and each app app
 
 ## Impact, risk and mitigation
 
-Each scenario opens on three more pages. **Impact Map** plays the ripple hop by hop on a world map and a five-column
-topology (suppliers → plants → customers → legal entities → apps). **Risk Outcome** grades every app against its own base,
-shows when each effect lands and names the single points of failure. **Mitigation & Recovery** runs the levers — stock on
-hand, reroutes to plants that make the category within their free hours, payables, POs, collections, plus labelled
-assumptions — and plays the recovery step by step.
+The scenario pages are tabs: **Studio / Impact Map / Mitigation & Recovery**. **Impact Map** plays the ripple hop by hop
+on a world map and a five-column topology (suppliers → plants → customers → legal entities → apps). **Mitigation &
+Recovery** runs the levers — stock on hand, reroutes to plants that make the category within their free hours, payables,
+POs, collections, plus labelled assumptions — and plays the recovery step by step: red marks a lane being replaced,
+dashed green its reroute. The risk outcome (each app graded against its own base, time to impact, single points of
+failure) is embedded below it.
 
 {md_table(MIT_HEAD, mitigation_rows())}
 
@@ -216,6 +253,11 @@ objects that read it, from Snowflake's own dependency graph (`tools/export_linea
 {chr(10).join(f"- **{a}** {b}" for a, b in caveats())}
 
 More: [`docs/enterprise`](docs/enterprise).
+
+*History:* until November 2026 the model lived in app-owned tables (`CORE.ONT_CLASS` / `ONT_RELATION_DEF` / `ONT_MODULE`,
+seven modules), was browsed on *Master Ontology Model* and *Enterprise Graph* pages, Ask went through Cortex Analyst on
+`SEMANTIC.SAP_ENTERPRISE_360`, and the export was `tools/export_enterprise.py`. Those tables, the semantic view and the
+agent still exist in Snowflake but the app no longer reads them.
 """)
 
     (docs / "01-concepts.md").write_text(f"""# 1. Concepts
@@ -224,22 +266,28 @@ More: [`docs/enterprise`](docs/enterprise).
 supplier's spend, Working Capital its payables, Supply Chain its lots — but none knows they are the same supplier.
 The master ontology adds one shared vocabulary and one identity per real-world party.
 
-**Upper ontology.** {F['abstract_classes']} abstract classes — Entity, Party, OrgUnit, Facility, Transaction, Item, Asset,
-Product — are the shared vocabulary. Every module class hangs off one of them.
+**Governed, not app-owned.** The vocabulary is the Snowflake Business Ontology on `{BO['account']}`: domain
+**{BO['domain']}** with subdomains {', '.join(BO['subdomains'])}. {BO['owned']} concepts are governed there; {BO['reused']}
+are reused from the governed **Supply Chain** domain and not redefined: {', '.join(BO['reused_names'])}.
 
-**Golden records.** LegalEntity ({F['golden_companies']}), Customer ({F['golden_customers']}), Supplier
-({F['golden_suppliers']}) and Department ({F['golden_departments']}) live in the core. Each app's local record is a
-`LocalCustomer` / `LocalSupplier` linked by `sameAs`, carrying its match method.
+{md_table(DOMAIN_HEAD, domain_rows())}
 
-**Modules.** One per app; each adds only what it alone owns:
+**Relationships.** {BO['enterprise_relationships']} Enterprise relationships: {REL_TYPES}. Custom verbs:
+{', '.join(BO['custom_verbs'])}. Business Ontology allows one custom relationship per concept pair, so money owed to a
+supplier is modelled on the invoice — *AP Invoice payable to Supplier*, *AR Invoice owed by Customer*.
 
-{md_table(["Module", "Name", "Source database", "Classes"],
-          [[m['module'], m['name'], f"`{m['source_database']}`",
-            next((c['n'] for c in F['classes_by_module'] if c['module'] == m['module']), 0)] for m in F['modules']])}
+**Golden records.** Legal Entity ({F['golden_companies']}), Customer ({F['golden_customers']}), Supplier
+({F['golden_suppliers']}) and Department ({F['golden_departments']}). Each app's local record is a *Local Customer* /
+*Local Supplier* linked by *same as*, carrying its match method.
 
-**Cross-module relations.** `buysFrom` (Spend) and `owesTo` (Working Capital) and `supplies` (Supply Chain) all land on
-the same golden Supplier; `sellsToCustomer` (Working Capital) and `shipsTo` (Supply Chain) on the same Customer;
-`employs` (People) and `ownedBy` (Supply Chain) on the same LegalEntity.
+**Representations.** {BO['representations']} links from concepts to the Snowflake objects that implement them (golden and
+member tables, 360 dynamic tables, class views). {', '.join(BO['unrepresented'])} have none: abstract, or no source object.
+
+**Instances.** Concepts are governed; their instances and links stay in `CORE.KG_NODE` / `KG_EDGE`
+({n(F['kg_nodes'])} nodes, {n(F['kg_edges'])} edges), each edge type tied to the governed relationship it instantiates.
+
+*History:* the first version modelled 32 classes and 17 relations in seven modules in app-owned `ONT_*` tables
+(`owesTo` was a relation then). Those tables remain in Snowflake but are no longer the model.
 """)
 
     (docs / "02-architecture.md").write_text(f"""# 2. Architecture
@@ -248,16 +296,25 @@ the same golden Supplier; `sellsToCustomer` (Working Capital) and `shipsTo` (Sup
 six 360 databases (L2 dynamic tables)
         │
 SAP_ENTERPRISE_ONTOLOGY
-  CORE       ONT_CLASS / ONT_RELATION_DEF / ONT_MODULE, KG_NODE / KG_EDGE, VW_ONT_* views
+  CORE       KG_NODE / KG_EDGE (instances), VW_ONT_* class views ({len(BO['new_class_views'])} new for the Business Ontology)
   XWALK      GOLDEN_COMPANY / CUSTOMER / SUPPLIER / DEPARTMENT, *_MEMBER, V_CROSSWALK
   ANALYTICS  DT_COMPANY_360, DT_CUSTOMER_360, DT_SUPPLIER_360   ({F['dynamic_tables']} dynamic tables, 1-day lag)
   SCENARIO   V_GEO, V_FLOW, V_PLANT_CAPACITY, V_PLANT_BUFFER, V_SUBSTITUTION   (from Supply Chain 360 tables)
-  SEMANTIC   SAP_ENTERPRISE_360       AGENTS   SAP_ENTERPRISE_ANALYST
+        │  represented by
+Snowflake Business Ontology ({BO['account']})
+  {BO['domain']} (+ {', '.join(d.split('.', 1)[1] for d in BO['subdomains'])})   {BO['owned']} concepts
+  Supply Chain (governed elsewhere)   {BO['reused']} concepts reused
+  {BO['relationships']} relationships, {BO['representations']} representations
         │
-tools/export_enterprise.py → data/enterprise_ontology.json ┐
-tools/export_lineage.py    → data/enterprise_lineage.json  ┴→ Express API (3011) → React (5186)
-                                                            └→ tools/bake_static.py → GitHub Pages
+tools/export_business_ontology.py  → data/ent_business_ontology.json  (governed snapshot)
+tools/export_enterprise_ontology.py → data/enterprise_ontology.json ┐  (inputs found via representations)
+tools/export_lineage.py            → data/enterprise_lineage.json  ┴→ Express API (3011) → React (5186)
+                                                                     └→ tools/bake_static.py → GitHub Pages
 ```
+
+**Representations are the wiring.** `tools/ent_ontology.py` reads the governed graph; `export_enterprise_ontology.py`
+resolves every input it reads (golden tables, 360 facts, class views) through a concept's representation and records it
+in `ontology_source`. `--check` is the parity gate: it rebuilds the export and compares it with the served file.
 
 **Aggregate before join.** Every source is summed to the golden id first, then joined, so a one-to-many crosswalk
 cannot multiply amounts. That is why the enterprise totals equal each app's own:
@@ -277,14 +334,23 @@ serials → orders → golden customer, reduced to one row per (supplier, order)
 
 | Step | Command | Notes |
 |---|---|---|
-| Core ontology | `sql/enterprise/01_core_schema.sql` | DB, schemas, {F['classes']} classes, {F['relations']} relations, modules |
+| Core schema | `sql/enterprise/01_core_schema.sql` | DB, schemas, KG tables (the legacy `ONT_*` tables it still creates are not read) |
 | Crosswalk | `sql/enterprise/02_crosswalk.sql` | deterministic; same input, same mapping |
 | Facts | `sql/enterprise/03_facts.sql` | dynamic tables; lag must be ≥ the 1-day upstream lag |
 | Graph | `sql/enterprise/04_kg_load.sql` | truncate-and-reload, idempotent |
-| Semantic view + agent | `sql/enterprise/05_semantic_agent.sql` | |
+| Semantic view + agent | `sql/enterprise/05_semantic_agent.sql` | still deployed; the app no longer uses Cortex Analyst |
 | Scenario network | `sql/enterprise/06_scenario_network.sql` | geography, capacity, buffers, capability — Supply Chain 360 tables only |
+| Class views | `sql/enterprise/07_business_ontology_views.sql` | {len(BO['new_class_views'])} `VW_ONT_*` views the Business Ontology represents: {', '.join(BO['new_class_views'])} |
+| Governed ontology | Business Ontology on `{BO['account']}` | {BO['domain']} domain + subdomains; reuses Supply Chain concepts |
+| Snapshot | `tools/export_business_ontology.py` | → `data/ent_business_ontology.json` ({BO['concepts']} concepts, {BO['relationships']} relationships, {BO['representations']} representations) |
+| App export | `tools/export_enterprise_ontology.py [--check]` | every input via representations; `--check` = parity gate vs the served export |
 | Regions | `tools/deploy_region.py <connection>` | copies Supply Chain OPS_EXT + ONTOLOGY from US, runs 01–06, **fails unless totals match US** |
 | Everything else | `tools/refresh_all.py` | exports, engine checks, public snapshots, docs and kit, then reconciles against Snowflake |
+
+*History:* `tools/export_enterprise.py` was replaced by `tools/export_enterprise_ontology.py`; its first `--check` run was
+identical to the old export.
+
+**Business Ontology is private preview and enabled on the US account only.** EU and APAC serve the exported snapshot.
 
 **Why the region script copies operations data rather than regenerating it.** The Supply Chain generator reads two
 base tables without `ORDER BY`; another account can return rows in a different order and the seeded draws diverge.
@@ -306,12 +372,15 @@ without Snowflake); the server imports the same file to give Ask Cortex the iden
 
 | Scenario | Path through the ontology | Inputs |
 |---|---|---|
-| Supplier failure | Supplier → supplies → Plant → shipsTo → Customer; Plant → ownedBy → LegalEntity; LegalEntity → buysFrom / owesTo → Supplier | weeks out, share covered by an alternate source |
-| Plant outage | Plant → shipsTo → Customer; Plant → ownedBy → LegalEntity; Supplier → supplies → Plant | weeks down |
-| Customer default | LegalEntity → sellsToCustomer → Customer ← shipsTo Plant | recovery % |
-| FX shock | LegalEntity reports in currency | currency, % vs USD |
-| Payment terms | LegalEntity → owesTo → Supplier → supplies → Plant | days later to pay, days sooner to collect |
-| Workforce | LegalEntity → employs → Employee; LegalEntity ← ownedBy Plant | company, % headcount |
+| Supplier failure | Supplier → supplies → Plant → ships to → Customer; Plant → owned by → Legal Entity; Legal Entity → buys from → Supplier ← payable to AP Invoice | weeks out, share covered by an alternate source |
+| Plant outage | Plant → ships to → Customer; Plant → owned by → Legal Entity; Supplier → supplies → Plant | weeks down |
+| Customer default | Legal Entity → sells to → Customer ← owed by AR Invoice; Customer ← ships to Plant | recovery % |
+| FX shock | Legal Entity reports in currency | currency, % vs USD |
+| Payment terms | AP Invoice → payable to → Supplier → supplies → Plant | days later to pay, days sooner to collect |
+| Workforce | Legal Entity → employs → Employee; Legal Entity ← owned by Plant | company, % headcount |
+
+Paths use the governed relationship names; *supplies*, *ships to* and *owned by* are Supply Chain relationships between
+reused concepts.
 
 **Shares, not summed dollars.** Supply Chain plant value and margin are weekly rates over the measured order period ({PERIOD});
 Finance and Working Capital use their own monthly revenue; Sales uses each customer's CRM pipeline. A lost share of plant
@@ -337,12 +406,12 @@ runs the scenario, plus its own Ask Cortex.
 
 - **Impact Map** — the same propagation as nodes and hops. Plants, suppliers and customers are placed at their Supply Chain 360
   addresses; legal entities at their first plant (an assumption). Timing uses each plant's minimum days of inventory.
-- **Risk Outcome** — each app graded against its own base (Low < 1%, Moderate 1–5%, High 5–15%, Critical ≥ 15%), a
+- **Risk outcome** (embedded below Mitigation & Recovery; a separate page until November 2026) — each app graded against its own base (Low < 1%, Moderate 1–5%, High 5–15%, Critical ≥ 15%), a
   time-to-impact view, single points of failure (single-source suppliers, sole-maker plants) and a register. Inherent
   and residual risk side by side.
 - **Mitigation & Recovery** — levers *from data*: run on stock held, reroute a category only to a plant that has shipped it and
   only within its free work-center hours (a plant fed by the failed supplier is excluded), hold payables, pause POs,
-  collect overdue receivables. Levers that are *assumptions* are labelled: second source, hedge ratio, credit insurance,
+  collect overdue receivables. During playback red marks a lane being replaced and dashed green its reroute. Levers that are *assumptions* are labelled: second source, hedge ratio, credit insurance,
   re-sale of freed capacity, plant-facing share of a headcount cut. Re-sold capacity is new margin, never netted
   against a write-off.
 
@@ -367,9 +436,12 @@ and this table, come from `tools/export_lineage.py`, which parses `sql/enterpris
 **Mitigation is planning grade.** Hours per unit are blended across a plant's work centers; reroutes do not model freight or
 qualification cost. Levers marked *your assumption* are inputs, not findings.
 
-**Ask Cortex** answers from the facts of the view on screen; it does not run new SQL. For open questions,
-query `{F['semantic_view']}` with Cortex Analyst (or the `AGENTS.SAP_ENTERPRISE_ANALYST` agent) in Snowsight. The public build has no Snowflake connection: it shows
-the baked default analysis only.
+**Ask Cortex** answers from the facts of the view on screen plus the governed definitions and relationships; it does not
+run new SQL. The app no longer offers a text-to-SQL path. The public build has no Snowflake connection: it shows the baked
+default analysis only.
+
+**Business Ontology coverage.** {', '.join(BO['unrepresented'])} have no representation, so nothing in the app reads them
+directly. Business Ontology allows one custom relationship per concept pair.
 """)
     print("wrote README.md and docs/enterprise/01-06")
 
@@ -394,7 +466,7 @@ def caveat_block(d):
 
 
 def doc_start_here():
-    d = new_doc("SAP Enterprise Ontology — Start Here", "Presales kit: a master ontology across six SAP BDC 360 apps")
+    d = new_doc("SAP Enterprise Ontology — Start Here", "Presales kit: a governed Snowflake Business Ontology across six SAP BDC 360 apps")
     callout(d, "In one line.", "Six 360 apps, one ontology: the same supplier, customer and company seen through Finance, "
             "Sales, People, Spend, Working Capital and Supply Chain at once — and Cortex reasoning across all of them.")
     h2(d, "The demo in eight numbers")
@@ -422,11 +494,13 @@ def doc_management():
             "also the one whose deviating lots sit in a top customer's orders — because each app holds its own copy of "
             "that supplier, under its own key.")
     h2(d, "What we built")
-    for t in [f"One ontology: {F['classes']} classes and {F['relations']} relations over all six apps.",
+    for t in [f"One governed ontology in Snowflake Business Ontology: {BO['owned']} concepts in the {BO['domain']} domain and "
+              f"{len(BO['subdomains'])} subdomains, plus {BO['reused']} reused from Supply Chain; {BO['enterprise_relationships']} "
+              f"relationships and {BO['representations']} representations to the objects behind them.",
               f"Golden records: {F['golden_companies']} legal entities, {F['golden_customers']} customers, "
               f"{F['golden_suppliers']} suppliers, {F['golden_departments']} departments, resolving {n(F['crosswalk_records'])} app records.",
               f"A knowledge graph of {n(F['kg_nodes'])} nodes and {n(F['kg_edges'])} edges with {F['dangling_edges']} dangling edges.",
-              "Cross-app 360 facts, a semantic view and a Cortex Agent, deployed identically in US, EU and APAC.",
+              "Cross-app 360 facts deployed identically in US, EU and APAC (Business Ontology itself: US only, private preview).",
               f"Lineage from {LIN['counts']['bdcProducts']} SAP BDC data products through the 360 apps into the ontology.",
               "Scenario modelling that maps the ripple, grades the risk per app and plans the mitigation.",
               f"An app with {len(F['enterprise_pages'])} enterprise pages and grounded Ask Cortex on each."]:
@@ -458,7 +532,7 @@ def doc_management():
 PERSONAS = [
     ("CFO", "Where is cash and margin leaking across entities?", [
         ("Executive Dashboard", "Legal entities across every app: revenue, margin, CCC, headcount, spend, OTIF in one table."),
-        ("Risk Outcome", "One shock graded per app against its own base; inherent versus residual after the plan."),
+        ("Mitigation & Recovery", "One shock graded per app against its own base (risk outcome below the plan); inherent versus residual."),
         ("Ask Cortex (companies)", "“Rank the companies on cash conversion and OTIF together.”"),
         ("Supplier 360", "Open payables next to spend and risk — where early-pay discounts are lost."),
     ]),
@@ -471,11 +545,12 @@ PERSONAS = [
         ("Impact Map", "Top supplier fails: play the ripple — plants by day of stock-out, then customers, entities, apps."),
         ("Mitigation & Recovery", "Run on stock, reroute where a plant can make it; show what stays exposed and why."),
         ("Customer 360", "Late-delivery cost ranked; open a customer that is also overdue on AR."),
-        ("Enterprise Graph", "Plants → customers and suppliers → plants, edges coloured by app."),
+        ("Ontology", "Plant, Supplier and Customer reused from Supply Chain; ships to and supplies are its relationships."),
         ("Ask Cortex (customer)", "“Is this account healthy across finance, sales and delivery?”"),
     ]),
     ("CIO / Data leader", "How is this governed and how does it scale?", [
-        ("Master Ontology Model", "Upper classes, golden classes, one module per app."),
+        ("Ontology", "The governed Enterprise domain and subdomains, Supply Chain concepts reused, each with its representations."),
+        ("Snowflake Ontology Details", "The same graph in Snowsight: definitions, representations and the audit trail."),
         ("BDC Lineage", "Every SAP BDC data product traced through the 360 apps into the ontology, with provenance."),
         ("Golden-Record Crosswalk", "Every local record and its match method — nothing hidden."),
     ]),
@@ -501,10 +576,11 @@ def doc_quickstart():
             "party across apps, and AI that reasons across all of them with the evidence on screen.")
     h2(d, "10-minute path")
     for i, t in enumerate([
+        "Ontology — the governed Enterprise graph; click Supplier to show it is reused from Supply Chain, with representations.",
         "Executive Dashboard — the eight numbers, then the legal-entity table (point at the US OTIF).",
         "Management Use Cases — pick the question your audience owns; run it.",
-        "Enterprise Scenario Studio — top supplier fails for 8 weeks: path, per-app effects, ranked customers.",
-        "Impact Map, then Mitigation & Recovery — play the ripple, then the recovery; land on what cannot be mitigated.",
+        "Scenario Studio — top supplier fails for 8 weeks: path, per-app effects, ranked customers.",
+        "Impact Map, then Mitigation & Recovery — play the ripple, then the recovery (red lane replaced, dashed green reroute); land on what cannot be mitigated.",
         "Supplier 360 — open the top-spend supplier: spend, AP, lots and the crosswalk members in one record.",
         "Ask Cortex on that supplier — a recommendation that cites Spend, Working Capital and Supply Chain.",
         "Customer 360 — the customers that are both overdue and late.",
@@ -512,7 +588,7 @@ def doc_quickstart():
         "Ask Cortex — ask one open cross-app question live.",
     ], 1):
         body(d, f"{i}. {t}")
-    h2(d, "Scenario beats (Enterprise Scenario Studio)")
+    h2(d, "Scenario beats (Scenario Studio)")
     table(d, ["Preset", "Say"], [[x["label"], x["summary"]] for x in SC], [2.1, 4.8])
     h2(d, "Use cases to open with")
     for role, q in USE_CASES[:5]:
@@ -526,6 +602,8 @@ def doc_quickstart():
     table(d, ["They say", "You say"], [
         ["“The customer matching is fake.”", "It is a demo crosswalk and labelled as such on every page. The ontology, graph and facts "
          "are built to take MDG or match-merge output in its place — swap XWALK, nothing else changes."],
+        ["“Who owns the definitions?”", "Snowflake Business Ontology: governed domains with review and history. Enterprise reuses "
+         "the Supply Chain domain's Supplier, Customer and Plant instead of redefining them."],
         ["“We already have a data warehouse.”", "The warehouse has tables; the ontology adds shared meaning and identity, "
          "which is what lets Cortex answer across domains without hand-written joins."],
         ["“Is it real-time?”", "The facts are dynamic tables on a one-day lag, matching the upstream 360 apps."],
@@ -544,30 +622,34 @@ def doc_architecture():
     d = new_doc("Architecture and Install", "The layers, why they are shaped this way, and how to stand them up")
     h2(d, "Schemas")
     table(d, ["Schema", "Holds"], [
-        ["CORE", "ONT_CLASS, ONT_RELATION_DEF, ONT_MODULE; KG_NODE / KG_EDGE; VW_ONT_* and exposure views"],
+        ["CORE", f"KG_NODE / KG_EDGE (instances); VW_ONT_* class views ({len(BO['new_class_views'])} added for the Business Ontology) and exposure views"],
         ["XWALK", "GOLDEN_COMPANY / CUSTOMER / SUPPLIER / DEPARTMENT, *_MEMBER tables, V_CROSSWALK"],
         ["ANALYTICS", f"DT_COMPANY_360, DT_CUSTOMER_360, DT_SUPPLIER_360 ({F['dynamic_tables']} dynamic tables)"],
         ["SCENARIO", f"V_GEO, V_FLOW, V_PLANT_CAPACITY, V_PLANT_BUFFER, V_SUBSTITUTION ({F['scenario_views']} views over Supply Chain 360)"],
-        ["SEMANTIC / AGENTS", "SAP_ENTERPRISE_360 semantic view; SAP_ENTERPRISE_ANALYST Cortex Agent"],
+        ["Business Ontology", f"{BO['domain']} + {len(BO['subdomains'])} subdomains on {BO['account']}; Supply Chain concepts reused"],
+        ["SEMANTIC / AGENTS", "SAP_ENTERPRISE_360 and SAP_ENTERPRISE_ANALYST still deployed; the app does not use them"],
     ], [1.6, 5.3])
-    h2(d, "Modules")
-    table(d, ["Module", "App", "Source database", "Classes"],
-          [[m["module"], m["name"], m["source_database"],
-            n(next((c["n"] for c in F["classes_by_module"] if c["module"] == m["module"]), 0))] for m in F["modules"]],
-          [0.9, 2.0, 2.9, 1.1])
+    h2(d, "Governed domains")
+    table(d, DOMAIN_HEAD, domain_rows(), [1.9, 0.9, 4.1])
+    body(d, f"{BO['enterprise_relationships']} Enterprise relationships ({REL_TYPES}); {BO['representations']} representations. "
+            f"No representation: {', '.join(BO['unrepresented'])}.", size=9, color=GREY)
     h2(d, "Design rules")
-    for t in ["Aggregate each source to the golden id before joining — amounts cannot multiply.",
+    for t in ["The model is governed in Snowflake Business Ontology; the app reads it, never defines it.",
+              "Reuse governed concepts from other domains (Supply Chain) instead of redefining them.",
+              "Every input is found through a representation; export_enterprise_ontology.py --check is the parity gate.",
+              "Aggregate each source to the golden id before joining — amounts cannot multiply.",
               "The graph holds identities and relationships; transactions stay in the source apps.",
               "Every golden link keeps its match method, so provenance is visible to users and to Cortex.",
-              "Ask Cortex is grounded: the server sends the view's facts to AI_COMPLETE and asks it not to invent numbers."]:
+              "Ask Cortex is grounded: the server sends the view's facts and governed definitions to AI_COMPLETE and asks it not to invent numbers."]:
         bullet(d, t)
     h2(d, "Install")
     table(d, ["Step", "Run"], [
-        ["1. Snowflake layer", "sql/enterprise/01..06 on the US account"],
-        ["2. Regions", "python3 tools/deploy_region.py dfreriks_eu_demo (and dfreriks_apac_demo)"],
-        ["3. App", "npm install && npm run dev — server 3011, client 5186"],
-        ["4. Data, public build, kit", "python3 tools/refresh_all.py — exports, checks the engine, bakes, reconciles"],
-        ["5. Publish", "push to main; GitHub Actions publishes the public site"],
+        ["1. Snowflake layer", "sql/enterprise/01..07 on the US account (07 = class views)"],
+        ["2. Governed ontology", "Enterprise domain + subdomains in Business Ontology; export_business_ontology.py, then export_enterprise_ontology.py --check"],
+        ["3. Regions", "python3 tools/deploy_region.py dfreriks_eu_demo (and dfreriks_apac_demo)"],
+        ["4. App", "npm install && npm run dev — server 3011, client 5186"],
+        ["5. Data, public build, kit", "python3 tools/refresh_all.py — exports, checks the engine, bakes, reconciles"],
+        ["6. Publish", "push to main; GitHub Actions publishes the public site"],
     ], [1.8, 5.1])
     return d
 
@@ -576,7 +658,8 @@ def doc_access():
     d = new_doc("Setup and Access", "Where everything lives and how to reach it")
     table(d, ["Thing", "Where"], [
         ["Repository", F["repo"]], ["Public site (no login)", F["site"]], ["Local app", f"{F['app_url']} ({F['ports']})"],
-        ["Database", F["database"]], ["Semantic view", F["semantic_view"]], ["Agent", F["agent"]],
+        ["Business Ontology", f"{BO['domain']} domain on {BO['account']} — {BO['snowsight_url']}"],
+        ["Database (instances)", F["database"]],
     ], [2.0, 4.9])
     h2(d, "Regions")
     table(d, ["Region", "Connection", "Parity", "Agent", "KG nodes", "Crosswalk"],
@@ -584,7 +667,8 @@ def doc_access():
             n(r.get("kg_nodes", 0)), n(r.get("crosswalk", 0))] for r in F["regions"]], [0.9, 1.9, 0.9, 0.8, 1.2, 1.2])
     h2(d, "Access")
     body(d, "The public site needs nothing. The live app needs a Snowflake key-pair connection with read access to the "
-            "six 360 databases and SAP_ENTERPRISE_ONTOLOGY; set it in server/.env (see server/.env.example).")
+            "six 360 databases and SAP_ENTERPRISE_ONTOLOGY, and READ on the Enterprise and Supply Chain ontology domains; "
+            "set it in server/.env (see server/.env.example). Business Ontology is private preview, US account only.")
     return d
 
 

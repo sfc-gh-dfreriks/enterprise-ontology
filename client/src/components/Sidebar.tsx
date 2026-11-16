@@ -1,34 +1,36 @@
-import { Network, Boxes, CloudLightning, Layers, Building2, Users, Truck, GitMerge,
-         Database, Globe2, ShieldAlert, Wrench, Sparkles } from "lucide-react";
+import { Boxes, CloudLightning, Layers, Building2, Users, Truck, GitMerge,
+         Database, Globe2, Wrench, Sparkles, Snowflake } from "lucide-react";
 
-export type PageId = "ent-overview" | "ent-usecases" | "ent-scenario" | "ent-model" | "ent-customers" | "ent-suppliers"
-                   | "ent-crosswalk" | "ent-graph" | "ent-lineage" | "ent-impact" | "ent-risk" | "ent-mitigation" | "ask-cortex";
+export type PageId = "ent-ontology" | "ent-overview" | "ent-snowflake" | "ask-cortex" | "ent-usecases" | "ent-scenario"
+                   | "ent-impact" | "ent-mitigation" | "ent-customers" | "ent-suppliers" | "ent-crosswalk" | "ent-lineage";
 
+// Same order as the Supply Chain Ontology app: the governed model first, then the
+// dashboard, the model inside Snowflake, Ask Cortex and the guided use cases, then
+// the scenario pages and the instance-level pages.
 const NAV: { id: PageId; label: string; icon: any; group?: string }[] = [
+  { id: "ent-ontology", label: "Ontology", icon: Layers },
+  { id: "ent-overview", label: "Executive Dashboard", icon: Building2 },
+  { id: "ent-snowflake", label: "Snowflake Ontology Details", icon: Snowflake },
   { id: "ask-cortex", label: "Ask Cortex", icon: Sparkles },
-  { id: "ent-overview", label: "Executive Dashboard", icon: Building2, group: "Enterprise ontology" },
   { id: "ent-usecases", label: "Management Use Cases", icon: Boxes },
-  { id: "ent-scenario", label: "Enterprise Scenario Studio", icon: CloudLightning },
+  { id: "ent-scenario", label: "Scenario Studio", icon: CloudLightning, group: "Scenarios" },
   { id: "ent-impact", label: "Impact Map", icon: Globe2 },
-  { id: "ent-risk", label: "Risk Outcome", icon: ShieldAlert },
   { id: "ent-mitigation", label: "Mitigation & Recovery", icon: Wrench },
-  { id: "ent-model", label: "Master Ontology Model", icon: Layers },
-  { id: "ent-customers", label: "Customer 360", icon: Users },
+  { id: "ent-customers", label: "Customer 360", icon: Users, group: "Golden records" },
   { id: "ent-suppliers", label: "Supplier 360", icon: Truck },
   { id: "ent-crosswalk", label: "Golden-Record Crosswalk", icon: GitMerge },
-  { id: "ent-graph", label: "Enterprise Graph", icon: Network },
   { id: "ent-lineage", label: "BDC Lineage", icon: Database },
 ];
 
-export function Sidebar({ active, onNavigate }: {
-  active: PageId; onNavigate: (p: PageId) => void;
+export function Sidebar({ active, onNavigate, concepts }: {
+  active: PageId; onNavigate: (p: PageId) => void; concepts: number;
 }) {
   return (
     <aside className="flex w-64 flex-col bg-gradient-to-b from-sf-dark to-sf-deeper text-white">
       <div className="px-5 py-5">
         <div className="inline-flex rounded-md bg-sf-primary px-3 py-1 text-lg font-extrabold tracking-widest">SAP</div>
         <div className="mt-2 text-base font-semibold leading-tight">Enterprise Ontology</div>
-        <div className="text-xs text-sf-pale">Finance · Sales · People · Spend · Working Capital · Supply Chain</div>
+        <div className="text-xs text-sf-pale">Enterprise domain{concepts ? ` • ${concepts} governed concepts` : ""}</div>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {NAV.map(({ id, label, icon: Icon, group }) => (<div key={id}>
@@ -42,7 +44,7 @@ export function Sidebar({ active, onNavigate }: {
         ))}
       </nav>
       <div className="border-t border-white/10 px-4 py-4 text-[10px] leading-tight text-sf-pale/70">
-        Master ontology over six SAP BDC 360 apps
+        Built on Snowflake Business Ontology · six SAP BDC 360 apps
       </div>
     </aside>
   );

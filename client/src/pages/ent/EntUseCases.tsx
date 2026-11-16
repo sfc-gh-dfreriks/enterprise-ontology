@@ -3,6 +3,7 @@ import { entApi } from "../../lib/api";
 import { runScenario, PRESETS, fmt } from "../../lib/entScenario";
 import { AskCortex } from "../../components/AskCortex";
 import { Panel, ModuleChips } from "../../components/EntBits";
+import { BuiltOn } from "../../components/SourceBadge";
 
 type Ctx = { s: any; d: any };
 interface UseCase { id: string; role: string; question: string; apps: string; path: string; open: string; preset?: string;
@@ -69,6 +70,7 @@ export default function EntUseCases({ onNavigate }: { onNavigate: (p: string) =>
   };
   return (
     <div className="space-y-4">
+      <BuiltOn walks="Each answer walks the Enterprise domain across apps: Legal Entity, Customer, Supplier, Department, Employee and the money documents." />
       <p className="max-w-4xl text-sm text-slate-600">
         Ten management questions that <b>no single 360 app can answer</b>, because each needs facts from two or more apps joined on
         the same company, customer or supplier. Each card shows the live answer, the ontology path it travels and the page that explores it.

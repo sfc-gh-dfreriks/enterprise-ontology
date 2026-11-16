@@ -3,6 +3,7 @@ import { useQuery } from "../../hooks/useQuery";
 import { entApi } from "../../lib/api";
 import { AskCortex } from "../../components/AskCortex";
 import { Panel, RankBars, ModuleChips, usd, num, Caveat } from "../../components/EntBits";
+import { BuiltOn } from "../../components/SourceBadge";
 
 /** Customer 360 and Supplier 360: ranked golden records, then one record across every app it appears in. */
 export default function EntParty({ kind }: { kind: "customer" | "supplier" }) {
@@ -21,6 +22,7 @@ export default function EntParty({ kind }: { kind: "customer" | "supplier" }) {
 
   return (
     <div className="space-y-4">
+      <BuiltOn walks="Golden records: Local Customer same as Customer, Local Supplier same as Supplier. Customer and Supplier are reused from the governed Supply Chain domain." />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <p className="max-w-3xl text-sm text-slate-600">
           {isC ? "A golden customer joins Finance AR, Working Capital AR and disputes, Sales orders and CRM pipeline, and Supply Chain OTIF."

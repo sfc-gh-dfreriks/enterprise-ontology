@@ -6,6 +6,7 @@ import { AskCortex } from "../../components/AskCortex";
 import { pickScenario, useActiveScenario } from "../../hooks/useActiveScenario";
 import { ScenarioTabs } from "../../components/EntScenarioBits";
 import { Panel, RankBars, ModuleChips, MODULE_COLOR, MODULE_NAME, Caveat, num } from "../../components/EntBits";
+import { BuiltOn } from "../../components/SourceBadge";
 
 const KINDS: { kind: Scenario["kind"]; label: string; hint: string }[] = [
   { kind: "supplier", label: "Supplier failure", hint: "Spend → Supply Chain → customers → Finance, Sales, Working Capital" },
@@ -59,6 +60,7 @@ export default function EntScenario({ onNavigate }: { onNavigate: (p: string) =>
 
   return (
     <div className="space-y-4">
+      <BuiltOn walks="Shocks propagate along governed relationships: Supplier supplies Plant, Plant ships to Customer, Plant owned by Legal Entity, Legal Entity buys from Supplier and sells to Customer." />
       <ScenarioTabs page="ent-scenario" onNavigate={onNavigate} />
       <p className="max-w-4xl text-sm text-slate-600">
         Pick a shock. The engine walks the master ontology — <i>supplies</i>, <i>shipsTo</i>, <i>ownedBy</i>, <i>buysFrom</i>,

@@ -3,6 +3,7 @@ import { useQuery } from "../../hooks/useQuery";
 import { entApi } from "../../lib/api";
 import { AskCortex } from "../../components/AskCortex";
 import { Panel, RankBars, ModuleChips, MODULE_COLOR, num, Caveat } from "../../components/EntBits";
+import { BuiltOn } from "../../components/SourceBadge";
 
 /** How every app's local records resolve to golden records, with the match method kept visible. */
 export default function EntCrosswalk() {
@@ -18,6 +19,7 @@ export default function EntCrosswalk() {
     acc[s.module] ??= { module: s.module, records: 0 }; acc[s.module].records += s.records; return acc; }, {}));
   return (
     <div className="space-y-4">
+      <BuiltOn walks="The crosswalk is the representation of Local Customer and Local Supplier (V_CROSSWALK): each local record is the same as one golden Customer or Supplier." />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2">
           {["Customer", "Supplier", "LegalEntity"].map((e) => (
