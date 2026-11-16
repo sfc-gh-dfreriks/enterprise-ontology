@@ -47,12 +47,14 @@ process.stdout.write(JSON.stringify(out));
 # order (tools/enterprise_facts.py "pages"), plus a scenario shot with Ask Cortex open.
 # "steps:N" clicks the playback's Next up to N times (stops when it is disabled), so
 # "steps:99" lands on the result step: on Mitigation that is where the red (lane being
-# replaced) and dashed green (reroute) lanes show.
+# replaced) and dashed green (reroute) lanes show. "panel:<text>" screenshots only the page
+# section containing <text>. --only <id> re-takes one shot and keeps the rest of the manifest.
 PLAN = [
     ("ontology", "ent-ontology", None, "wait:4000"),
     ("overview", "ent-overview", None, None),
     ("snowflake", "ent-snowflake", None, None),
     ("ask_cortex", "ask-cortex", None, "cortex"),
+    ("agent_search", "ent-snowflake", None, "panel:The agent looks up the governed meaning before it answers"),
     ("usecases", "ent-usecases", None, None),
     ("scenario", "ent-scenario", "Top-spend supplier fails (8 weeks)", None),
     ("scenario_cortex", "ent-scenario", "Top-spend supplier fails (8 weeks)", "cortex"),
@@ -73,6 +75,8 @@ def main():
     print(f"wrote {SCEN} ({len(json.loads(r.stdout))} presets)")
 
     SHOTS.mkdir(parents=True, exist_ok=True)
+    only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None
+    old = {m["id"]: m for m in json.loads((SHOTS / "manifest.json").read_text())} if only else {}
     manifest = []
     with sync_playwright() as p:
         b = p.chromium.launch()
@@ -80,6 +84,10 @@ def main():
         errors = []
         pg.on("pageerror", lambda e: errors.append(str(e)))
         for sid, h, preset, action in PLAN:
+            if only and sid != only:
+                if sid in old:
+                    manifest.append(old[sid])
+                continue
             pg.goto(f"{APP}#{h}")
             pg.wait_for_timeout(2500)
             if preset:
@@ -100,7 +108,14 @@ def main():
             elif action and action.startswith("wait:"):
                 pg.wait_for_timeout(int(action.split(":")[1]))
             f = SHOTS / f"{sid}.png"
-            pg.screenshot(path=str(f))
+            if action and action.startswith("panel:"):
+                # sticky headers would overlap an element shot
+                pg.add_style_tag(content="header,.sticky,[class*=sticky]{position:static !important}")
+                el = pg.locator("section", has_text=action.split(":", 1)[1]).last
+                el.scroll_into_view_if_needed()
+                el.screenshot(path=str(f))
+            else:
+                pg.screenshot(path=str(f))
             manifest.append({"id": sid, "file": str(f), "page": h})
             print(f"  shot {sid}")
         b.close()

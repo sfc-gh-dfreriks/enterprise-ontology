@@ -1,0 +1,12 @@
+{
+ "check": "governed_number",
+ "question": "Which suppliers have the most spend? Say which governed concept the number represents.",
+ "tools": [
+  "Enterprise360",
+  "business_ontology",
+  "system_execute_sql",
+  "business_ontology",
+  "business_ontology"
+ ],
+ "answer": "I couldn't find a governed Business Ontology definition for supplier spend in the Enterprise domain, so I can't say which governed concept this number represents. I searched \"supplier spend\", \"spend\" and \"purchase spend\". The only matches were Supply Chain entities like `Supply Chain.Supplier`, and none of them defines a spend metric.\n\nThe figures below are **not governed**. They come from the `supplier.spend_usd` field in the Enterprise 360 semantic view (`SAP_ENTERPRISE_ONTOLOGY.SEMANTIC.SAP_ENTERPRISE_360`, built on `DT_SUPPLIER_360`). That view describes the field only as \"Spend with the supplier, USD\". It doesn't give a time period, and no ontology formula or policy covers it.\n\n**The top suppliers by spend are Teledyne DALSA (about $322K), Coherent Corp (about $279K) and Fabrikam Packaging (about $264K).** TRUMPF Lasertechnik and Festo AG are next, both around $257K\u2013$263K.\n\n\n\n- **Where it comes from:** The spend figure comes from the Spend app (SPD). The \"apps\" column shows which other apps each supplier also appears in: Finance, Working Capital and Supply Chain.\n- **Currency:** All amounts are in USD at company planning rates.\n- **Supplier identity:** Records from different apps are matched to one supplier using a demo crosswalk. A supplier's total depends on how those records were combined.\n- **Category labels:** Some supplier categories look odd, such as Teledyne DALSA under \"HR & Staffing\" and Coherent under \"Travel & Expense\". This may be demo data, so check them before relying on the categories.\n\nWithout a governed definition I can't apply any policy, such as a scenario, period or inclusion rule. If your team keeps a spend term under another name, tell me and I'll check it."
+}

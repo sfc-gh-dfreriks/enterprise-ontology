@@ -1,0 +1,11 @@
+{
+ "check": "governed_number",
+ "question": "Which suppliers have the most spend? Say which governed concept the number represents.",
+ "tools": [
+  "Enterprise360",
+  "system_execute_sql",
+  "server_skill",
+  "data_to_chart"
+ ],
+ "answer": "Teledyne DALSA has the most spend at **$321.6K**. Coherent Corp is second ($279.2K), followed by Fabrikam Packaging ($264.5K), TRUMPF Lasertechnik ($262.9K) and Festo AG ($257.1K). Spend is fairly evenly spread: the 10th-largest supplier, Woodgrove Components, still has $186.2K.\n\n**What the number means:** `spend_usd` is the **Spend 360 purchase spend** for each golden supplier, in USD at company planning rates. It comes from the Spend app (SPD). It is not payables or invoices. Open payables (`ap_open_usd`, from Working Capital plus Finance) is a separate measure, and it is shown next to spend in the table for context only.\n\n\n\n**Caveats:**\n- **Demo crosswalk:** Supplier identities come from a demo crosswalk that maps each app's local vendor records to one golden supplier. Each ranking depends on that mapping.\n- **No time filter:** These figures are the full spend held on each supplier record; no date range was applied.\n- **Odd data points:**\n  - Open payables are 10\u201335 times higher than spend for every supplier. For example, Wingtip Metals has $6.7M open AP against $201K spend. Payables aren't limited to Spend 360 purchases, so the two numbers shouldn't be read as a ratio.\n  - Some supplier categories look like demo data, such as Teledyne DALSA listed under \"HR & Staffing\".\n- **Supply Chain coverage:** Fabrikam Packaging, Trey Services, Wingtip Metals and Woodgrove Components don't show up in Supply Chain (SCM). Their deliveries and quality aren't tracked there."
+}

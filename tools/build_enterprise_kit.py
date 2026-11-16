@@ -121,6 +121,19 @@ def eight_numbers():
     ]
 
 
+AG = F["agent_search"]
+AG_HEAD = ["Question", "What changed"]
+AG_LEAD = (f"The Cortex agent `{AG['agent']}` now searches the governed Business Ontology (tool `business_ontology`, "
+           f"plus read-only ontology reads through `system_execute_sql`) before it answers: {AG['domains']}. It cites "
+           "each concept as domain.concept, labels every number Governed, Derived or Bound table, and declines rather "
+           "than guess when no governed definition exists. The same change gave the Analyst tool a warehouse: without "
+           "one, every SQL API call failed with error 391920.")
+
+
+def agent_rows():
+    return [[r["question"], r["verdict"]] for r in AG["rows"]]
+
+
 def caveats():
     return [
         ("Demo crosswalk.", "The six apps came from different SAP BDC demo tenants and share no customer or supplier keys. "
@@ -135,7 +148,8 @@ def caveats():
          "Operations by region. On the maps each legal entity sits at its first plant."),
         ("Private preview.", f"Snowflake Business Ontology is enabled on the US account only ({BO['account']}). The EU and "
          "APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is "
-         "parity-checked against US, the governed graph is not replicated."),
+         "parity-checked against US, the governed graph is not replicated. For the same reason the agent's "
+         "ontology search runs in US only."),
         ("Demo enrichment.", "Some 360 inputs are demo enrichment or CRM export rather than an SAP BDC data product; "
          "BDC Lineage labels each one."),
         ("Mitigation.", "Reroutes, stock cover and capacity come from Supply Chain 360 data and are planning grade. Second source, "
@@ -168,6 +182,8 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 - **Ontology:** Snowflake Business Ontology on `{BO['account']}` — governed domain **{BO['domain']}** with subdomains
   {', '.join(d.split('.', 1)[1] for d in BO['subdomains'])}, reusing {BO['reused']} concepts of the governed
   **Supply Chain** domain
+- **Agent:** `{AG['agent']}` searches the governed ontology before it answers, cites domain.concept and declines when
+  no governed definition exists (US only) — see [Concepts](docs/enterprise/01-concepts.md#agent-ontology-search)
 - **Instance data:** `{F['database']}` — crosswalk, knowledge graph (`CORE.KG_NODE` / `KG_EDGE`), 360 facts, scenario network
 
 ## In numbers
@@ -208,7 +224,8 @@ analysis baked at build time.
 ## Build
 
 ```bash
-# Snowflake layer (US is the source of truth): 01..07 (07 = class views the Business Ontology represents)
+# Snowflake layer (US is the source of truth): 01..08 (07 = class views the Business Ontology represents,
+# 08 = agent ontology search; US only)
 for f in sql/enterprise/0*.sql; do snow sql -c dfreriksdemo -f "$f"; done
 python3 tools/export_business_ontology.py            # governed graph -> data/ent_business_ontology.json
 python3 tools/export_enterprise_ontology.py --check  # parity gate: walk representations, compare with the served export
@@ -286,6 +303,16 @@ member tables, 360 dynamic tables, class views). {', '.join(BO['unrepresented'])
 **Instances.** Concepts are governed; their instances and links stay in `CORE.KG_NODE` / `KG_EDGE`
 ({n(F['kg_nodes'])} nodes, {n(F['kg_edges'])} edges), each edge type tied to the governed relationship it instantiates.
 
+## Agent ontology search
+
+{AG_LEAD}
+
+Before and after, {AG['checks']} checks run {AG['run_date']}:
+
+{md_table(AG_HEAD, agent_rows())}
+
+{AG['note']} The app shows the same comparison on *Snowflake Ontology Details*.
+
 *History:* the first version modelled 32 classes and 17 relations in seven modules in app-owned `ONT_*` tables
 (`owesTo` was a relation then). Those tables remain in Snowflake but are no longer the model.
 """)
@@ -341,6 +368,7 @@ serials → orders → golden customer, reduced to one row per (supplier, order)
 | Semantic view + agent | `sql/enterprise/05_semantic_agent.sql` | still deployed; the app no longer uses Cortex Analyst |
 | Scenario network | `sql/enterprise/06_scenario_network.sql` | geography, capacity, buffers, capability — Supply Chain 360 tables only |
 | Class views | `sql/enterprise/07_business_ontology_views.sql` | {len(BO['new_class_views'])} `VW_ONT_*` views the Business Ontology represents: {', '.join(BO['new_class_views'])} |
+| Agent ontology search | `{AG['sql']}` | adds `business_ontology` search, read-only ontology reads and the Analyst warehouse to `{AG['agent']}` (US only); `tools/export_agent_search.py` → `client/src/data/agent_search.json` |
 | Governed ontology | Business Ontology on `{BO['account']}` | {BO['domain']} domain + subdomains; reuses Supply Chain concepts |
 | Snapshot | `tools/export_business_ontology.py` | → `data/ent_business_ontology.json` ({BO['concepts']} concepts, {BO['relationships']} relationships, {BO['representations']} representations) |
 | App export | `tools/export_enterprise_ontology.py [--check]` | every input via representations; `--check` = parity gate vs the served export |
@@ -604,6 +632,9 @@ def doc_quickstart():
          "are built to take MDG or match-merge output in its place — swap XWALK, nothing else changes."],
         ["“Who owns the definitions?”", "Snowflake Business Ontology: governed domains with review and history. Enterprise reuses "
          "the Supply Chain domain's Supplier, Customer and Plant instead of redefining them."],
+        ["“Will the agent make things up?”", "It searches the governed ontology first, cites domain.concept, labels each "
+         "number Governed, Derived or Bound table, and says so when no governed definition exists — e.g. supplier spend "
+         "is not yet a governed concept. US only."],
         ["“We already have a data warehouse.”", "The warehouse has tables; the ontology adds shared meaning and identity, "
          "which is what lets Cortex answer across domains without hand-written joins."],
         ["“Is it real-time?”", "The facts are dynamic tables on a one-day lag, matching the upstream 360 apps."],
@@ -627,12 +658,17 @@ def doc_architecture():
         ["ANALYTICS", f"DT_COMPANY_360, DT_CUSTOMER_360, DT_SUPPLIER_360 ({F['dynamic_tables']} dynamic tables)"],
         ["SCENARIO", f"V_GEO, V_FLOW, V_PLANT_CAPACITY, V_PLANT_BUFFER, V_SUBSTITUTION ({F['scenario_views']} views over Supply Chain 360)"],
         ["Business Ontology", f"{BO['domain']} + {len(BO['subdomains'])} subdomains on {BO['account']}; Supply Chain concepts reused"],
-        ["SEMANTIC / AGENTS", "SAP_ENTERPRISE_360 and SAP_ENTERPRISE_ANALYST still deployed; the app does not use them"],
+        ["SEMANTIC / AGENTS", "SAP_ENTERPRISE_360 and SAP_ENTERPRISE_ANALYST still deployed; the app does not call them. "
+         "The agent now searches the Business Ontology (US only)"],
     ], [1.6, 5.3])
     h2(d, "Governed domains")
     table(d, DOMAIN_HEAD, domain_rows(), [1.9, 0.9, 4.1])
     body(d, f"{BO['enterprise_relationships']} Enterprise relationships ({REL_TYPES}); {BO['representations']} representations. "
             f"No representation: {', '.join(BO['unrepresented'])}.", size=9, color=GREY)
+    h2(d, "Agent ontology search")
+    body(d, AG_LEAD.replace("`", ""))
+    table(d, AG_HEAD, agent_rows(), [2.6, 4.3], zebra=True)
+    body(d, AG["note"] + f" Spec: {AG['sql']}.", size=9, color=GREY)
     h2(d, "Design rules")
     for t in ["The model is governed in Snowflake Business Ontology; the app reads it, never defines it.",
               "Reuse governed concepts from other domains (Supply Chain) instead of redefining them.",
@@ -644,7 +680,7 @@ def doc_architecture():
         bullet(d, t)
     h2(d, "Install")
     table(d, ["Step", "Run"], [
-        ["1. Snowflake layer", "sql/enterprise/01..07 on the US account (07 = class views)"],
+        ["1. Snowflake layer", "sql/enterprise/01..08 on the US account (07 = class views, 08 = agent ontology search)"],
         ["2. Governed ontology", "Enterprise domain + subdomains in Business Ontology; export_business_ontology.py, then export_enterprise_ontology.py --check"],
         ["3. Regions", "python3 tools/deploy_region.py dfreriks_eu_demo (and dfreriks_apac_demo)"],
         ["4. App", "npm install && npm run dev — server 3011, client 5186"],

@@ -1,0 +1,9 @@
+{
+ "check": "number",
+ "question": "Which company has the best revenue per employee?",
+ "tools": [
+  "Enterprise360",
+  "system_execute_sql"
+ ],
+ "answer": "**Japan Operations has the highest revenue per employee, at about $36.9K.** It has the smallest workforce of the three companies (403 people), and its revenue of $14.9M is close to the others'.\n\n- **US Operations:** about $33.7K per employee ($14.96M revenue, 444 people).\n- **EU Operations:** about $32.6K per employee ($14.52M revenue, 445 people).\n\nRevenue is in USD at company planning rates and comes from Finance. Headcount comes from People 360. The three companies bring in almost the same revenue, so the ranking comes down to headcount. Japan is ahead because it has about 40 fewer people, not because it sells more.\n\n"
+}

@@ -1,0 +1,8 @@
+{
+ "check": "unknown",
+ "question": "What is Widget Velocity Quotient?",
+ "tools": [
+  "Enterprise360"
+ ],
+ "answer": "I couldn't find \"Widget Velocity Quotient\" in the Enterprise 360 model. No metric, column or calculation by that name exists in Finance, Sales, People, Spend, Working Capital or Supply Chain 360, so I can't define it or calculate it from this data.\n\nThese existing measures might be what you mean:\n- **Speed or flow:** cash conversion cycle (CCC), days sales outstanding (DSO), days payable outstanding (DPO) and operating rate %, all at the legal-entity level.\n- **Delivery performance:** on-time-in-full % (OTIF) and late-delivery cost, for legal entities and for each customer.\n- **Commercial throughput:** order value, open pipeline and win rate %, for each customer.\n- **Supplier quality:** lots that failed or deviated at inspection, and the customer order value that contains those lots.\n\nIf Widget Velocity Quotient is an internal KPI, send me its formula (for example, order value \u00f7 cash conversion cycle). I can calculate it from the parts available here by company, customer or supplier."
+}

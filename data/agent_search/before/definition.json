@@ -1,0 +1,9 @@
+{
+ "check": "definition",
+ "question": "What is a Legal Entity in our enterprise model?",
+ "tools": [
+  "Enterprise360",
+  "system_execute_sql"
+ ],
+ "answer": "In our enterprise model, a Legal Entity is a **golden company record**: one operating company, identified by an SAP company code. It's the shared anchor that all the business apps tie their numbers to, so Finance, Sales, People, Spend, Working Capital and Supply Chain all report against the same company.\n\n**There are three legal entities:**\n\n\n\n**What each legal entity record holds (all money in USD at company planning rates):**\n- **Finance:** revenue, net income and net margin %.\n- **Working Capital:** days sales outstanding (latest month), days payable outstanding, cash conversion cycle, and overdue receivables (latest month).\n- **People 360:** headcount and the annual salary cost of active employees.\n- **Spend 360:** purchase spend and the share of spend that's on contract.\n- **Supply Chain:** on-time-in-full % (OTIF), operating rate % and late-delivery cost at the company's plants.\n\n**How it fits with the rest of the model:**\n- Each app keeps its own local company records. A crosswalk maps those records to the golden legal entity, and it records how each match was made.\n- Legal entities sit next to the other two golden records: **customers** and **suppliers**. Use the legal entity for company-level questions like profit and loss, working capital, headcount, spend, OTIF or operating rate. Use customers and suppliers for questions about one counterparty across all apps.\n- The customer and supplier matching comes from a demo crosswalk, so keep that in mind when an answer depends on matching counterparties across apps."
+}

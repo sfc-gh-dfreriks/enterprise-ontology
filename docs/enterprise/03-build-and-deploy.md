@@ -9,6 +9,7 @@
 | Semantic view + agent | `sql/enterprise/05_semantic_agent.sql` | still deployed; the app no longer uses Cortex Analyst |
 | Scenario network | `sql/enterprise/06_scenario_network.sql` | geography, capacity, buffers, capability — Supply Chain 360 tables only |
 | Class views | `sql/enterprise/07_business_ontology_views.sql` | 7 `VW_ONT_*` views the Business Ontology represents: VW_ONT_COSTCENTER, VW_ONT_DEPARTMENT, VW_ONT_EMPLOYEE, VW_ONT_LEGALENTITY, VW_ONT_LOCALCUSTOMER, VW_ONT_LOCALSUPPLIER, VW_ONT_SPENDCATEGORY |
+| Agent ontology search | `sql/enterprise/08_agent_business_ontology.sql` | adds `business_ontology` search, read-only ontology reads and the Analyst warehouse to `SAP_ENTERPRISE_ONTOLOGY.AGENTS.SAP_ENTERPRISE_ANALYST` (US only); `tools/export_agent_search.py` → `client/src/data/agent_search.json` |
 | Governed ontology | Business Ontology on `MSB89522` | Enterprise domain + subdomains; reuses Supply Chain concepts |
 | Snapshot | `tools/export_business_ontology.py` | → `data/ent_business_ontology.json` (27 concepts, 36 relationships, 52 representations) |
 | App export | `tools/export_enterprise_ontology.py [--check]` | every input via representations; `--check` = parity gate vs the served export |

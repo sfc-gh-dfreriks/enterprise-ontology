@@ -1,0 +1,11 @@
+{
+ "check": "relations",
+ "question": "How is an AP Invoice related to other entities?",
+ "tools": [
+  "business_ontology",
+  "business_ontology",
+  "business_ontology",
+  "business_ontology"
+ ],
+ "answer": "I couldn't find a governed definition of \"AP Invoice\" in the Business Ontology that I have access to. That means I can't tell you how it relates to other entities.\n\nI searched for \"AP invoice\" (three tries), then the broader terms \"invoice\" and \"accounts payable\". None of them returned anything. This doesn't prove the concept is missing from the ontology. It may be under another name or in a domain I can't see. I haven't filled the gap with a standard industry definition, because that wouldn't be the governed one.\n\nSome ways forward:\n- **Different term:** if your organization calls it something else, such as \"Supplier Invoice\", \"Vendor Bill\", \"Payable\" or \"Purchase Invoice\", tell me and I'll search for that.\n- **Data instead:** I could look at supplier-level data, such as supplier quality exposure and the golden supplier records. That would show how invoices link to suppliers and company codes in practice, not as a governed definition. Supplier identity there comes from a demo crosswalk."
+}

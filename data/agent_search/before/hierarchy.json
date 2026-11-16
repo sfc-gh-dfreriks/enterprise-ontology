@@ -1,0 +1,9 @@
+{
+ "check": "hierarchy",
+ "question": "What kinds of party does the enterprise model have?",
+ "tools": [
+  "Enterprise360",
+  "system_execute_sql"
+ ],
+ "answer": "The enterprise model has three kinds of party. Each one is a golden record that pulls together the local records for that party from the different apps:\n\n1. **Customer** (20 golden records, from 108 local records): matched across Finance (FIN), Sales (SAL), Supply Chain (SCM) and Working Capital (WCP). The customer view covers receivables, overdue receivables, open pipeline, order value, OTIF (on-time in-full delivery), win rate, credit risk and late-delivery cost.\n2. **Supplier** (25 golden records, from 351 local records): matched across Finance, Spend (SPD), Supply Chain and Working Capital. The supplier view covers spend, open payables, early-payment discounts lost, lots that failed or deviated at inspection, risk score, single-source flag and main category.\n3. **Legal entity / company** (3 golden records: US, EU and Japan Operations, from 15 local records): the only party type in all five apps, including People (PPL). The company view covers the P&L, working capital (DSO, DPO, cash conversion cycle), headcount and salary cost, spend, OTIF and operating rate.\n\nThe model also has a supplier \u2192 customer quality-exposure link. It traces a supplier's deviating component lots through to the customer orders that contain them.\n\nThe customer and supplier records are linked using a demo crosswalk. Treat those counts and matches as illustrative, not production master data.\n\n"
+}

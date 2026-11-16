@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SourceBadge } from "../../components/SourceBadge";
+import { AgentSearch } from "../../components/AgentSearch";
 
 /**
  * What the governed Enterprise domain looks like inside Snowflake itself.
@@ -86,6 +87,8 @@ export default function EntSnowflakeOntology() {
           </div>
         </section>
       ))}
+
+      <AgentSearch />
 
       <p className="text-xs text-slate-500">
         Business Ontology is in private preview and enabled on the US demo account.

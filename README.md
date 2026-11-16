@@ -9,6 +9,8 @@ can cross all six apps in a single traversal — and one shock can be traced, gr
 - **Ontology:** Snowflake Business Ontology on `MSB89522` — governed domain **Enterprise** with subdomains
   Finance, People, Sales, Spend, Working Capital, reusing 8 concepts of the governed
   **Supply Chain** domain
+- **Agent:** `SAP_ENTERPRISE_ONTOLOGY.AGENTS.SAP_ENTERPRISE_ANALYST` searches the governed ontology before it answers, cites domain.concept and declines when
+  no governed definition exists (US only) — see [Concepts](docs/enterprise/01-concepts.md#agent-ontology-search)
 - **Instance data:** `SAP_ENTERPRISE_ONTOLOGY` — crosswalk, knowledge graph (`CORE.KG_NODE` / `KG_EDGE`), 360 facts, scenario network
 
 ## In numbers
@@ -81,7 +83,8 @@ analysis baked at build time.
 ## Build
 
 ```bash
-# Snowflake layer (US is the source of truth): 01..07 (07 = class views the Business Ontology represents)
+# Snowflake layer (US is the source of truth): 01..08 (07 = class views the Business Ontology represents,
+# 08 = agent ontology search; US only)
 for f in sql/enterprise/0*.sql; do snow sql -c dfreriksdemo -f "$f"; done
 python3 tools/export_business_ontology.py            # governed graph -> data/ent_business_ontology.json
 python3 tools/export_enterprise_ontology.py --check  # parity gate: walk representations, compare with the served export
@@ -161,7 +164,7 @@ objects that read it, from Snowflake's own dependency graph (`tools/export_linea
 - **Currency.** Money is USD at the Working Capital planning rates (EUR 1.08, JPY 0.0067, USD 1). Sales order value counts USD orders only.
 - **Scale between apps.** Sales 360 order values come from the BDC demo tenant and are far larger than the Supply Chain demo orders. Compare within an app, not across.
 - **Company mapping.** Supply Chain plants carry company codes 1000/2000/3000; they are mapped to US, EU and Japan Operations by region. On the maps each legal entity sits at its first plant.
-- **Private preview.** Snowflake Business Ontology is enabled on the US account only (MSB89522). The EU and APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is parity-checked against US, the governed graph is not replicated.
+- **Private preview.** Snowflake Business Ontology is enabled on the US account only (MSB89522). The EU and APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is parity-checked against US, the governed graph is not replicated. For the same reason the agent's ontology search runs in US only.
 - **Demo enrichment.** Some 360 inputs are demo enrichment or CRM export rather than an SAP BDC data product; BDC Lineage labels each one.
 - **Mitigation.** Reroutes, stock cover and capacity come from Supply Chain 360 data and are planning grade. Second source, hedging, insurance and re-sale are labelled assumptions you set.
 

@@ -1,0 +1,10 @@
+{
+ "check": "unknown",
+ "question": "What is Widget Velocity Quotient?",
+ "tools": [
+  "business_ontology",
+  "business_ontology",
+  "business_ontology"
+ ],
+ "answer": "I couldn't find a governed definition for \"Widget Velocity Quotient\" in the Business Ontology. I searched the exact term, retried it, and also tried the broader \"widget velocity\". None of these searches returned anything.\n\nThis doesn't mean the term doesn't exist. It may sit in a domain I can't access, or go by a different name. I won't give you an industry or made-up definition in its place. Because I couldn't find a definition, I also haven't pulled any numbers for it.\n\nIf you know another name for it, or what it's meant to measure (for example inventory turnover, sales speed or throughput), I can look up the matching governed concept. Or, if it belongs to a particular team or area such as Supply Chain or Sales, tell me and I'll search there."
+}

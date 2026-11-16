@@ -8,7 +8,7 @@
 
 **Company mapping.** Supply Chain plants carry company codes 1000/2000/3000; they are mapped to US, EU and Japan Operations by region. On the maps each legal entity sits at its first plant.
 
-**Private preview.** Snowflake Business Ontology is enabled on the US account only (MSB89522). The EU and APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is parity-checked against US, the governed graph is not replicated.
+**Private preview.** Snowflake Business Ontology is enabled on the US account only (MSB89522). The EU and APAC copies keep serving the exported snapshot (data/ent_business_ontology.json); their instance data is parity-checked against US, the governed graph is not replicated. For the same reason the agent's ontology search runs in US only.
 
 **Demo enrichment.** Some 360 inputs are demo enrichment or CRM export rather than an SAP BDC data product; BDC Lineage labels each one.
 

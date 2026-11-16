@@ -151,6 +151,7 @@ def main() -> int:
 
     say("1/7  exporting the governed Enterprise domain and walking it to the data")
     run([sys.executable, "tools/export_business_ontology.py"])
+    run([sys.executable, "tools/export_agent_search.py"])  # before/after agent runs, saved snapshot
     run([sys.executable, "tools/export_enterprise_ontology.py"])
     say("2/7  exporting SAP BDC lineage"); run([sys.executable, "tools/export_lineage.py"])
     say("3/7  verifying the scenario engine"); run(["npx", "tsx", "tools/verify_ent_mitigation.ts"])

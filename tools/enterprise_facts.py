@@ -99,6 +99,13 @@ def main():
     f["bo"] = governed(bo)
     f["bo"]["new_class_views"] = sorted(set(re.findall(r"VIEW\s+(?:\w+\.)*(VW_ONT_\w+)",
                                                        (ROOT / "sql/enterprise/07_business_ontology_views.sql").read_text())))
+    # Agent ontology search: before/after of SAP_ENTERPRISE_ANALYST with Business Ontology search
+    # (tools/export_agent_search.py; agent spec in sql/enterprise/08_agent_business_ontology.sql).
+    ag = json.loads((ROOT / "client/src/data/agent_search.json").read_text())
+    f["agent_search"] = {**ag, "checks": len(ag["rows"]),
+                         "tools_after": sorted({t for r in ag["rows"] for t in r["after_tools"]}),
+                         "searched_every": all("business_ontology" in r["after_tools"] for r in ag["rows"]),
+                         "sql": "sql/enterprise/08_agent_business_ontology.sql"}
     f["kg_nodes"] = q("kg_nodes", f"SELECT COUNT(*) FROM {DB}.CORE.KG_NODE")
     f["kg_edges"] = q("kg_edges", f"SELECT COUNT(*) FROM {DB}.CORE.KG_EDGE")
     f["dangling_edges"] = q("dangling_edges", f"""SELECT COUNT(*) FROM {DB}.CORE.KG_EDGE e

@@ -173,6 +173,20 @@ def s03b_snowflake(prs):
     return s
 
 
+def s03c_agent(prs):
+    ag = F["agent_search"]
+    s = content(prs, "The agent checks the governed meaning first",
+                "SAP_ENTERPRISE_ANALYST with Business Ontology search")
+    picture(s, shot("agent_search"), LEFT, TOP + 0.02, 4.2, 3.6)
+    rows = [(r["verdict"], 8.5, False, DK1, 3) for r in ag["rows"] if r["check"] in ("reuse", "number", "governed_number", "unknown")]
+    card(s, LEFT + 4.4, TOP + 0.05, FULLW - 4.4, 3.55, f"{ag['checks']} checks, before and after",
+         [("Searches Enterprise, then Supply Chain; cites domain.concept.", 10, True, DK1, 3),
+          ("Labels each number Governed, Derived or Bound table; declines when nothing is governed.", 10, False, DK1, 6)] +
+         rows + [("US only (Business Ontology is not in EU/APAC). Also fixed: no Analyst warehouse (error 391920).",
+                  8, False, BODY_GREY, 0)], accent=SF_BLUE)
+    return s
+
+
 def s04_golden(prs):
     # the 474 records include the legal-entity members, so the golden count includes the legal entities too
     s = content(prs, f"{num(F['crosswalk_records'])} app records, {F['golden_customers'] + F['golden_suppliers'] + F['golden_companies']} golden records",
@@ -307,6 +321,7 @@ def s10_next(prs):
 DEMO = [("ontology", "Ontology", "The governed Enterprise domain, drawn natively"),
         ("overview", "Executive Dashboard", "The three legal entities across all six apps"),
         ("snowflake", "Snowflake Ontology Details", "The same governed graph in Snowsight"),
+        ("agent_search", "Snowflake Ontology Details: agent search", "The agent looks up the governed meaning before it answers"),
         ("ask_cortex", "Ask Cortex", "Grounded in governed definitions and each app's evidence"),
         ("usecases", "Management Use Cases", "Ten questions that need two or more apps"),
         ("scenario", "Scenario Studio", "One shock, six apps — path, effects, rankings"),
@@ -317,7 +332,7 @@ DEMO = [("ontology", "Ontology", "The governed Enterprise domain, drawn natively
         ("suppliers", "Supplier 360", "Golden suppliers across Spend, WC, Finance and Supply Chain"),
         ("crosswalk", "Golden-Record Crosswalk", "Every local record and how it was matched"),
         ("lineage", "BDC Lineage", "SAP BDC data products traced through the 360 apps")]
-assert [d[1] for d in DEMO if d[0] != "scenario_cortex"] == F["enterprise_pages"], "demo deck out of sidebar order"
+assert [d[1] for d in DEMO if d[0] not in ("scenario_cortex", "agent_search")] == F["enterprise_pages"], "demo deck out of sidebar order"
 
 
 def build(name, slides_fn):
@@ -338,7 +353,7 @@ def build(name, slides_fn):
 
 
 def overview(prs):
-    return [fn(prs) for fn in (s01_title, s02_problem, s03_model, s03b_snowflake, s04_golden, s05_app, s06_cortex,
+    return [fn(prs) for fn in (s01_title, s02_problem, s03_model, s03b_snowflake, s03c_agent, s04_golden, s05_app, s06_cortex,
                                s06b_scenarios, s06d_impact, s06f_mitigation, s06c_usecases, s06g_lineage,
                                s07_proof, s08_regions, s09_caveats, s10_next)]
 

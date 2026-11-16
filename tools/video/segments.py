@@ -73,6 +73,20 @@ SEGMENTS = [
                    body="Finance, Sales, People, Spend and Working Capital as subdomains, linked into "
                         "the Supply Chain domain."),
     ),
+    dict(
+        id="03b_agent", page="snowflake",
+        actions=[("scroll_to_text", "The agent looks up the governed meaning"), ("wait", 1500)],
+        narration=(
+            "The enterprise analyst agent now searches this ontology too. [[slnc 350]] Before, asked "
+            "whether an enterprise supplier is the same as a supply chain supplier, it guessed they were "
+            "different. [[slnc 300]] Now it finds the governed answer: Enterprise reuses the supply "
+            "chain supplier, and maps each app's local record onto it. [[slnc 300]] And when a figure "
+            "isn't a governed metric, like supplier spend, it says so."
+        ),
+        popup=dict(title="The agent searches the ontology", figure="before: guessed · after: governed",
+                   body="Definitions from Business Ontology, numbers from the Enterprise 360 "
+                        "semantic view, each labelled by source."),
+    ),
 
     # ------------------------------------------------------------ one picture
     dict(

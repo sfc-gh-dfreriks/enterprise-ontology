@@ -1,0 +1,10 @@
+{
+ "check": "hierarchy",
+ "question": "What kinds of party does the enterprise model have?",
+ "tools": [
+  "business_ontology",
+  "business_ontology",
+  "system_execute_sql"
+ ],
+ "answer": "The enterprise model has two kinds of party: **Local Customer** and **Local Supplier**. Both are entities, and both are defined as \"a kind of Party\". Each one is the same as exactly one \"golden\" (master) Customer or Supplier record.\n\n| Node (domain.node) | Kind | Definition (governed) | Synonyms |\n|---|---|---|---|\n| Enterprise.Local Customer | Entity | A customer record as one 360 app knows it, before conforming. Each Local Customer is the same as exactly one golden Customer and is a member of a Legal Entity. | None recorded |\n| Enterprise.Local Supplier | Entity | A supplier record as one 360 app knows it, before conforming. Each Local Supplier is the same as exactly one golden Supplier. | None recorded |\n\n**Where Party, Customer and Supplier are defined:** There's no Party, Customer or Supplier node inside the Enterprise domain. They're defined in a different area, the **Supply Chain** domain (outside the enterprise model):\n- **Supply Chain.Party** (entity, abstract): \"An external organisation the network trades with\". It is meant to cover both Supplier and Customer, so a question about \"who is affected\" can span both in one answer.\n- **Supply Chain.Customer:** \"An organisation that receives finished output.\"\n- **Supply Chain.Supplier:** \"An organisation that ships material into a plant.\"\n\n**Not a party: Legal Entity.** Enterprise.Legal Entity is the internal company, not a party. Its definition is a company code covering US, EU and Japan Operations, and it's a kind of Org Unit. In the enterprise model, a Legal Entity sells to Customers, buys from and owes Suppliers, employs Employees and owns Plants.\n\n**Other notes:**\n- None of these definitions has a formula, because they're entities rather than metrics.\n- The link from each local record to its golden Customer or Supplier comes from a demo crosswalk, so any answer that depends on customer or supplier identity relies on that demo mapping."
+}

@@ -1,0 +1,11 @@
+{
+ "check": "definition",
+ "question": "What is a Legal Entity in our enterprise model?",
+ "tools": [
+  "business_ontology",
+  "business_ontology",
+  "system_execute_sql",
+  "system_execute_sql"
+ ],
+ "answer": "No Enterprise results. Retry with synonym.**Enterprise.Legal Entity** is a company code: the single \"golden\" legal entity that books revenue, owes suppliers and employs people. The enterprise model has three of them: US, EU and Japan Operations.\n\n**Governed definition**\n- **Name:** Enterprise.Legal Entity\n- **Kind:** Entity (status: active)\n- **Definition:** \"A company code: the golden legal entity that books revenue, owes suppliers and employs people (US, EU and Japan Operations). A kind of Org Unit.\" (Source: Enterprise Ontology app, SAP_ENTERPRISE_ONTOLOGY)\n- **Formula:** None. It's an entity, not a metric.\n- **Synonyms:** None recorded.\n\n**How it connects to other concepts** (all active relationships; the list is complete)\n- **It is a type of** Enterprise.Org Unit. Org Unit is a general category for any internal unit that owns cost, revenue or people, and it has no records of its own.\n- **Sells to** Supply Chain.Customer\n- **Buys from / owes** Supply Chain.Supplier\n- **Employs** Enterprise.People.Employee\n- **Owns** Supply Chain.Plant\n- **Has members:** each Enterprise.Local Customer belongs to one Legal Entity. A Local Customer is a customer record as a single 360 app sees it, before records are matched across apps.\n\nCustomer, Supplier and Plant are defined in the Supply Chain ontology, which is outside the Enterprise domain. Customers and suppliers are linked to a legal entity through a demo crosswalk, which matches the same customer or supplier across apps.\n\n**Where the data lives:** The concept is linked to the golden company table (`XWALK.GOLDEN_COMPANY`), the company membership table (`XWALK.COMPANY_MEMBER`), the Company 360 table (`ANALYTICS.DT_COMPANY_360`), a legal-entity view (`CORE.VW_ONT_LEGALENTITY`) and the Working Capital 360 monthly KPI table.\n\nI can pull figures for each legal entity, such as revenue, payables or headcount, if you need them."
+}
