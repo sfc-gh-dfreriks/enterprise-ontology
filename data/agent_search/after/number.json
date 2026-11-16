@@ -2,9 +2,9 @@
  "check": "number",
  "question": "Which company has the best revenue per employee?",
  "tools": [
-  "Enterprise360",
   "business_ontology",
+  "Enterprise360",
   "system_execute_sql"
  ],
- "answer": "**Japan Operations has the highest revenue per employee: about $36.9K** ($14.89M revenue across 403 people). US Operations comes second at about $33.7K and EU Operations third at about $32.6K.\n\n\n\n- **Why Japan comes out on top:** all three companies bring in about the same revenue ($14.5M\u2013$15.0M). Japan has about 40 fewer employees than the US or EU, so its revenue per employee is higher.\n- **Sources:** revenue is from the Finance app and headcount is from the People 360 app. Both come from the company table in the Enterprise 360 semantic view, and money is in USD at company planning rates.\n- **How it was calculated:** I couldn't find an accessible governed definition of \"revenue per employee\" in the Business Ontology. So I used the plain ratio: revenue divided by headcount. It's a derived figure, not a governed metric.\n- **No demo crosswalk involved:** this is a company-level comparison, so it doesn't rely on the customer/supplier matching."
+ "answer": "Japan Operations (APAC) has the highest revenue per employee, about **$36.9K**: $14.89M of revenue across 403 employees. US Operations comes second at about $33.7K and EU Operations third at about $32.6K.\n\n\n\n- **Where the numbers come from:** Revenue is from the Finance app (USD at company planning rates). Headcount is from People 360. Both are read from the company view in the Enterprise 360 semantic view.\n- **How it's calculated:** I couldn't find a governed definition of \"revenue per employee\" in the Business Ontology, so this is my own calculation: revenue divided by headcount. It's not an official metric.\n- **Why Japan comes out on top:** All three companies have similar revenue, between $14.5M and $15.0M. Japan's lead comes from having about 40 fewer employees than the other two.\n\nThe answer doesn't rely on customer or supplier identity, so the demo crosswalk isn't involved."
 }
