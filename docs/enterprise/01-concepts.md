@@ -42,13 +42,13 @@ Before and after, 7 checks run 2026-11-16:
 |---|---|
 | What is a Legal Entity in our enterprise model? | Governed definition of Enterprise.Legal Entity and its IS_A link to Org Unit, instead of a description assembled from the semantic view. |
 | Is a Supplier in the Enterprise model the same concept as in Supply Chain? | Correct: Enterprise reuses Supply Chain.Supplier and adds Local Supplier (same as one golden Supplier). Before, it said they were different concepts. |
-| What kinds of party does the enterprise model have? | Governed Local Customer and Local Supplier, both a kind of Party, with Party defined in Supply Chain. |
+| What kinds of party does the enterprise model have? | Reads the governed IS_A Party links, with Party itself defined in the Supply Chain domain, instead of listing data tables. |
 | Which company has the best revenue per employee? | Same figures (Japan Operations, about $36.9K per employee), now labelled Derived because no governed metric exists. |
 | Which suppliers have the most spend? Say which governed concept the number represents. | Same ranking, and it says plainly that supplier spend is not yet a governed concept: a gap to fill. |
-| How is an AP Invoice related to other entities? | AP Invoice not found yet (approved hours before the run, still indexing). It declines rather than invent relationships. |
+| How is an AP Invoice related to other entities? | Governed links from the ontology: AP Invoice is a kind of Transaction and is payable to a Supplier. Before, it said the model had no AP Invoice. |
 | What is Widget Velocity Quotient? | Searches the ontology first, then declines without substituting an industry definition. |
 
-Before: the original spec with one Cortex Analyst tool. Called through the SQL API it failed every question (391920, no execution environment), so it was run as a temporary copy with a warehouse. The Enterprise terms were approved the same day; ontology search can lag new terms by up to 6 hours. The app shows the same comparison on *Snowflake Ontology Details*.
+Before: the original spec with one Cortex Analyst tool. Called through the SQL API it failed every question (391920, no execution environment), so it was run as a temporary copy with a warehouse. After runs were taken once the ontology search index had caught up with the Enterprise terms (about 6 hours after approval). The app shows the same comparison on *Snowflake Ontology Details*.
 
 *History:* the first version modelled 32 classes and 17 relations in seven modules in app-owned `ONT_*` tables
 (`owesTo` was a relation then). Those tables remain in Snowflake but are no longer the model.
